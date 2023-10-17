@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "mqtt.client": {
+      "commandName": "Project",
+      "commandLineArgs": "--Appppppp=\"Test\""
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}
