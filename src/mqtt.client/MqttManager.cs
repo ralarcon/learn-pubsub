@@ -45,7 +45,14 @@ internal class MqttManager
     private async Task ClientConnectedAsync(MqttClientConnectedEventArgs eventArgs)
     {
         Console.WriteLine($"Client {_config.MqttConfig.ClientId} connected to mqtt://{_config.MqttConfig.MqttServer}:{_config.MqttConfig.MqttPort}.");
-        await _mqttClient.SubscribeAsync(_config.MqttConfig.SubscribeTopic);
+        if (_config.Suscriber)
+        {
+            await _mqttClient.SubscribeAsync(_config.MqttConfig.SubscribeTopic);
+        }
+        else
+        {
+            Console.WriteLine($"[{DateTime.UtcNow}]\tSkipping subscription to configured topic (if any). Client not configured to subscribe to topic.");
+        }
     }
 
     private async Task ClientDisconnectedAsync(MqttClientDisconnectedEventArgs eventArgs)
@@ -69,7 +76,7 @@ internal class MqttManager
             DateTime echoTime = DateTime.UtcNow;
 
             // Echo the message to another topic
-            EchoMessage echo = new EchoMessage
+            EchoMessage echo = new()
             {
                 ClientId = _config.MqttConfig.ClientId,
                 OriginalMessage = message,
@@ -78,7 +85,9 @@ internal class MqttManager
                 EchoTimestamp = echoTime,
                 SourceTopic = eventArgs.ApplicationMessage.Topic,
                 SourceToEchoDiff = echoTime - message.SourceTimestamp,
-                Id = message.Id
+                SourceToEchoMillesconds = (echoTime - message.SourceTimestamp).TotalMilliseconds,
+                Id = message.Id,
+                IsProcessingSimulated = _config.ProcessingDelayInMilliseconds != 0
             };
 
             Console.WriteLine($"{DateTime.UtcNow}\tEchoing message: {JsonSerializer.Serialize(echo)}");

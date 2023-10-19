@@ -13,5 +13,7 @@ internal class EchoMessage
     public DateTime EchoTimestamp { get; set; } = DateTime.UtcNow;
     public Message OriginalMessage { get; set; } = default!;
     public TimeSpan SourceToEchoDiff { get; set; }
+    public double SourceToEchoMillesconds { get; set; }
     public int Id { get; set; }
+    public bool IsProcessingSimulated { get; set; }
 }

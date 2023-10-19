@@ -5,6 +5,8 @@ internal class AppConfig
 {
     public MqttConfig MqttConfig { get; set; } = new MqttConfig();
     public int ProcessingDelayInMilliseconds { get; set; } = 0;
+    public bool Publisher { get; set; } = true;
+    public bool Suscriber { get; set; } = true;
 }
 
 internal class AppConfigProvider

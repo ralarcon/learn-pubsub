@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 internal class MqttConfig
 {
-    public string MqttServer { get; set; }
+    public string MqttServer { get; set; } = default!;
     public int MqttPort { get; set; }
-    public string EchoTopic { get; set; }
-    public string SubscribeTopic { get; set; }
-    public string PublishTopic { get; set; }
-    public string ClientId { get; set; }
+    public string EchoTopic { get; set; } = default!;
+    public string SubscribeTopic { get; set; } = default!;
+    public string PublishTopic { get; set; } = default!;
+    public string ClientId { get; set; } = default!;
 }
 

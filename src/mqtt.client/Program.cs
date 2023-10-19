@@ -14,17 +14,32 @@ Console.WriteLine($"Publishing to '{appConfig.MqttConfig.PublishTopic}' with a d
 // Start the MQTT client
 await mqttManager.StartMqttClient();
 
-int msgId = 1;
+int msgId = 0;
 while (true)
 {
-    var message = new Message
+    if (appConfig.Publisher)
     {
-        ClientId = appConfig.MqttConfig.ClientId,
-        SourceTimestamp = DateTime.UtcNow,
-        Content = $"Message {msgId}",
-        Id = msgId
-    };
-    msgId++;
-    await mqttManager.PublishMessageAsync(message);
+        var message = new Message
+        {
+            ClientId = appConfig.MqttConfig.ClientId,
+            SourceTimestamp = DateTime.UtcNow,
+            Content = $"Message {msgId}",
+            Id = msgId
+        };
+        msgId++;
+        await mqttManager.PublishMessageAsync(message);
+        if (msgId % 15 == 0)
+        {
+            Console.WriteLine($"[{DateTime.UtcNow}]\tPublishing messages to configured topic.");
+        }
+    }
+    else
+    {
+        msgId++;
+        if (msgId % 15 == 0)        
+        {
+            Console.WriteLine($"[{DateTime.UtcNow}]\tSkipping publishing to configured topic (if any). Client not configured to publish messages.");
+        }
+    }
     await Task.Delay(TimeSpan.FromSeconds(1));
 }
