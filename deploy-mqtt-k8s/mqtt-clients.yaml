@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mqtt-loopback
+  namespace: pubsub-tests
+spec:
+  containers:
+  - name: mqtt-loopback-client
+    image: ragcdevacr.azurecr.io/mqttechoclient:latest
+    envFrom:
+    - configMapRef:
+        name: mqtt-loopback-config
+  restartPolicy: OnFailure
+  imagePullSecrets:
+  - name: ragcdevacr-pull-secret
