@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 var appConfig = AppConfigProvider.LoadConfiguration();
 
-Console.WriteLine($"MQTT Echoer: '{appConfig.MqttConfig.ClientId}'");
+Console.WriteLine($"[{DateTime.UtcNow}]\tMQTT Echoer: '{appConfig.MqttConfig.ClientId}'");
 
 CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
@@ -19,24 +19,25 @@ AppDomain.CurrentDomain.ProcessExit += (s, e) =>
     cancellationTokenSource.Cancel();
 };
 
-if (appConfig.Suscriber)
+if (appConfig.Subscriber)
 {
-    Console.WriteLine($"Subscribing to '{appConfig.MqttConfig.SubscribeTopic}' at 'mqtt://{appConfig.MqttConfig.MqttServer}:{appConfig.MqttConfig.MqttPort}'");
+    Console.WriteLine($"[{DateTime.UtcNow}]\tSubscribing to '{appConfig.MqttConfig.SubscribeTopic}' at 'mqtt://{appConfig.MqttConfig.MqttServer}:{appConfig.MqttConfig.MqttPort}'");
 }
 
 if (appConfig.Publisher)
 {
-    Console.WriteLine($"Publishing to '{appConfig.MqttConfig.PublishTopic}'. Message Interval: {appConfig.PublishingIntervalInMilliseconds} msec. Processing delay: {appConfig.ProcessingDelayInMilliseconds} msec.");
+    Console.WriteLine($"[{DateTime.UtcNow}]\tPublishing to '{appConfig.MqttConfig.PublishTopic}'. Message Interval: {appConfig.PublishingIntervalInMilliseconds} msec. Processing delay: {appConfig.ProcessingDelayInMilliseconds} msec.");
 }
 
 // Start the MQTT client
 await mqttManager.StartMqttClient();
 
-Stopwatch uptimeWatch = Stopwatch.StartNew();
+Stopwatch aliveWatch = Stopwatch.StartNew();
 Guid batchId = Guid.NewGuid();
 int sequence = 0;
 while (true && !cancellationTokenSource.IsCancellationRequested)
 {
+
     if (appConfig.Publisher)
     {
         var message = new Message
@@ -49,9 +50,10 @@ while (true && !cancellationTokenSource.IsCancellationRequested)
         };
         sequence++;
         await mqttManager.PublishMessageAsync(message);
-        if (uptimeWatch.Elapsed.TotalSeconds % 60 == 0)
+        if (aliveWatch.Elapsed.TotalSeconds % 60 > 0)
         {
-            Console.WriteLine($"[{DateTime.UtcNow}]\tUptime: {uptimeWatch.Elapsed.TotalSeconds} seconds. Publishing messages to configured topic.");
+            Console.WriteLine($"[{DateTime.UtcNow}]\tUptime: {aliveWatch.Elapsed.TotalSeconds} seconds. Publishing messages to configured topic.");
+            aliveWatch.Restart();
         }
     }
     await Task.Delay(TimeSpan.FromSeconds(1));

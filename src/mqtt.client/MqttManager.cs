@@ -14,7 +14,7 @@ internal class MqttManager
     private readonly AppConfig _config;
     private readonly CancellationToken _cancellationToken;
     private readonly JsonSerializerOptions _jsonOptions;
-    private readonly Stopwatch _uptimeWatch = Stopwatch.StartNew();
+    private readonly Stopwatch _aliveWatch = Stopwatch.StartNew();
     public MqttManager(AppConfig config, CancellationToken cancellationToken)
     {
         _config = config;
@@ -43,16 +43,17 @@ internal class MqttManager
 
     private async Task ConnectingFailedAsync(ConnectingFailedEventArgs eventArgs)
     {
-        Console.WriteLine($"Client {_config.MqttConfig.ClientId} FAILED to connected to mqtt://{_config.MqttConfig.MqttServer}:{_config.MqttConfig.MqttPort}. Exception:\n{eventArgs.Exception}");
+        Console.WriteLine($"[{DateTime.UtcNow}]\tClient {_config.MqttConfig.ClientId} FAILED to connected to mqtt://{_config.MqttConfig.MqttServer}:{_config.MqttConfig.MqttPort}. Exception:\n{eventArgs.Exception}");
         await Task.CompletedTask;
     }
 
     private async Task ClientConnectedAsync(MqttClientConnectedEventArgs eventArgs)
     {
-        Console.WriteLine($"Client {_config.MqttConfig.ClientId} connected to mqtt://{_config.MqttConfig.MqttServer}:{_config.MqttConfig.MqttPort}.");
-        if (_config.Suscriber)
+        Console.WriteLine($"[{DateTime.UtcNow}]\tClient {_config.MqttConfig.ClientId} connected to mqtt://{_config.MqttConfig.MqttServer}:{_config.MqttConfig.MqttPort}.");
+        if (_config.Subscriber)
         {
             await _mqttClient.SubscribeAsync(_config.MqttConfig.SubscribeTopic);
+            Console.WriteLine($"[{DateTime.UtcNow}]\tClient {_config.MqttConfig.ClientId} subscribed to {_config.MqttConfig.SubscribeTopic}.");
         }
         else
         {
@@ -62,7 +63,7 @@ internal class MqttManager
 
     private async Task ClientDisconnectedAsync(MqttClientDisconnectedEventArgs eventArgs)
     {
-        Console.WriteLine($"Client {_config.MqttConfig.ClientId} disconnected from mqtt://{_config.MqttConfig.MqttServer}:{_config.MqttConfig.MqttPort}: {eventArgs.ReasonString}");
+        Console.WriteLine($"[{DateTime.UtcNow}]\tClient {_config.MqttConfig.ClientId} disconnected from mqtt://{_config.MqttConfig.MqttServer}:{_config.MqttConfig.MqttPort}: {eventArgs.ReasonString}");
         await Task.CompletedTask;
     }
 
@@ -123,14 +124,15 @@ internal class MqttManager
 
         await _mqttClient.EnqueueAsync(appMessage);
 
-        if (_uptimeWatch.Elapsed.TotalSeconds % 60 == 0 && !_config.ShowConsoleEchoes)
+        if (_aliveWatch.Elapsed.TotalSeconds % 60 > 0 && !_config.ShowConsoleEchoes)
         {
-            Console.WriteLine($"[{DateTime.UtcNow}]\tUptime: {_uptimeWatch.Elapsed.TotalSeconds} seconds. Echoing messages is working OK.");
-            Console.WriteLine($"{DateTime.UtcNow}\tLast echoed message: {JsonSerializer.Serialize(echoMessage)}");
+            Console.WriteLine($"[{DateTime.UtcNow}]\tUptime: {_aliveWatch.Elapsed.TotalSeconds} seconds. Echoing messages is working OK.");
+            Console.WriteLine($"[{DateTime.UtcNow}]\t\tLast echoed message: {JsonSerializer.Serialize(echoMessage)}");
+            _aliveWatch.Restart();
         }
         else if (_config.ShowConsoleEchoes)
         {
-            Console.WriteLine($"{DateTime.UtcNow}\tEchoing message: {JsonSerializer.Serialize(echoMessage)}");
+            Console.WriteLine($"[{ DateTime.UtcNow}]\tEchoing message: {JsonSerializer.Serialize(echoMessage)}");
             Console.WriteLine();
         }
     }
