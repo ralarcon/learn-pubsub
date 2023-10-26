@@ -1,4 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 // See https://aka.ms/new-console-template for more information
 
@@ -6,16 +9,33 @@ var appConfig = AppConfigProvider.LoadConfiguration();
 
 Console.WriteLine($"MQTT Echoer: '{appConfig.MqttConfig.ClientId}'");
 
-var mqttManager = new MqttManager(appConfig);
+CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-Console.WriteLine($"Subscribing to '{appConfig.MqttConfig.SubscribeTopic}' at 'mqtt://{appConfig.MqttConfig.MqttServer}:{appConfig.MqttConfig.MqttPort}'");
-Console.WriteLine($"Publishing to '{appConfig.MqttConfig.PublishTopic}' with a delay of {appConfig.ProcessingDelayInMilliseconds} milliseconds");
+var mqttManager = new MqttManager(appConfig, cancellationTokenSource.Token);
+
+AppDomain.CurrentDomain.ProcessExit += (s, e) =>
+{
+    Console.WriteLine("Exiting...");
+    cancellationTokenSource.Cancel();
+};
+
+if (appConfig.Suscriber)
+{
+    Console.WriteLine($"Subscribing to '{appConfig.MqttConfig.SubscribeTopic}' at 'mqtt://{appConfig.MqttConfig.MqttServer}:{appConfig.MqttConfig.MqttPort}'");
+}
+
+if (appConfig.Publisher)
+{
+    Console.WriteLine($"Publishing to '{appConfig.MqttConfig.PublishTopic}'. Message Interval: {appConfig.PublishingIntervalInMilliseconds} msec. Processing delay: {appConfig.ProcessingDelayInMilliseconds} msec.");
+}
 
 // Start the MQTT client
 await mqttManager.StartMqttClient();
 
-int msgId = 0;
-while (true)
+Stopwatch uptimeWatch = Stopwatch.StartNew();
+Guid batchId = Guid.NewGuid();
+int sequence = 0;
+while (true && !cancellationTokenSource.IsCancellationRequested)
 {
     if (appConfig.Publisher)
     {
@@ -23,22 +43,15 @@ while (true)
         {
             ClientId = appConfig.MqttConfig.ClientId,
             SourceTimestamp = DateTime.UtcNow,
-            Content = $"Message {msgId}",
-            Id = msgId
+            Content = $"Message {sequence} from batch {batchId.ToString()}",
+            SequenceId = sequence,
+            BatchId = batchId
         };
-        msgId++;
+        sequence++;
         await mqttManager.PublishMessageAsync(message);
-        if (msgId % 15 == 0)
+        if (uptimeWatch.Elapsed.TotalSeconds % 60 == 0)
         {
-            Console.WriteLine($"[{DateTime.UtcNow}]\tPublishing messages to configured topic.");
-        }
-    }
-    else
-    {
-        msgId++;
-        if (msgId % 15 == 0)        
-        {
-            Console.WriteLine($"[{DateTime.UtcNow}]\tSkipping publishing to configured topic (if any). Client not configured to publish messages.");
+            Console.WriteLine($"[{DateTime.UtcNow}]\tUptime: {uptimeWatch.Elapsed.TotalSeconds} seconds. Publishing messages to configured topic.");
         }
     }
     await Task.Delay(TimeSpan.FromSeconds(1));

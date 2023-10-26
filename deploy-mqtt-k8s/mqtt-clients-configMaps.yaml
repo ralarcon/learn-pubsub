@@ -13,6 +13,7 @@ data:
   AppConfig__ProcessingDelayInMilliseconds: "0"
   AppConfig__Publisher: "true"
   AppConfig__Subscriber: "true"
+  AppConfig__ShowConsoleEchoes: "false"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -27,6 +28,7 @@ data:
   AppConfig__ProcessingDelayInMilliseconds: "0"
   AppConfig__Publisher: "true"
   AppConfig__Subscriber: "false"
+  AppConfig__ShowConsoleEchoes: "false"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -41,6 +43,7 @@ data:
   AppConfig__ProcessingDelayInMilliseconds: "0"
   AppConfig__Publisher: "true"
   AppConfig__Subscriber: "false"
+  AppConfig__ShowConsoleEchoes: "false"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -56,6 +59,7 @@ data:
   AppConfig__ProcessingDelayInMilliseconds: "0"
   AppConfig__Subscriber: "true"
   AppConfig__Publisher: "false"
+  AppConfig__ShowConsoleEchoes: "false"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -71,3 +75,4 @@ data:
   AppConfig__ProcessingDelayInMilliseconds: "0"
   AppConfig__Subscriber: "true"
   AppConfig__Publisher: "false"
+  AppConfig__ShowConsoleEchoes: "false"

@@ -10,6 +10,7 @@ internal class Message
     public string ClientId { get; set; } = default!;
     public DateTime SourceTimestamp { get; set; }
     public string Content { get; set; } = default!;
-    public int Id { get; set; }
+    public int SequenceId { get; set; }
+    public Guid BatchId { get; set; }
     public DateTime? E4KSystemTimestamp { get; set; } = null;
 }

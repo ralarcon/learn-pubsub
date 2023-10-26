@@ -3,6 +3,7 @@ using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Protocol;
 using System;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Text;
 using System.Text.Json;
@@ -11,11 +12,15 @@ internal class MqttManager
 {
     private readonly IManagedMqttClient _mqttClient;
     private readonly AppConfig _config;
-
-    public MqttManager(AppConfig config)
+    private readonly CancellationToken _cancellationToken;
+    private readonly JsonSerializerOptions _jsonOptions;
+    private readonly Stopwatch _uptimeWatch = Stopwatch.StartNew();
+    public MqttManager(AppConfig config, CancellationToken cancellationToken)
     {
         _config = config;
         _mqttClient = new MqttFactory().CreateManagedMqttClient();
+        _cancellationToken = cancellationToken;
+        _jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.General);
     }
 
     public async Task StartMqttClient()
@@ -65,43 +70,49 @@ internal class MqttManager
     {
         DateTime receiveTime = DateTime.UtcNow;
 
-        var payload = Encoding.UTF8.GetString(eventArgs.ApplicationMessage.PayloadSegment);
-
-        if (!string.IsNullOrEmpty(payload))
+        async Task ProcessMessageAsync()
         {
-            Message message = JsonSerializer.Deserialize<Message>(payload)!;
-            //Simulate Processing Time
-            await Task.Delay(_config.ProcessingDelayInMilliseconds);
+            var payload = Encoding.UTF8.GetString(eventArgs.ApplicationMessage.PayloadSegment);
 
-            DateTime echoTime = DateTime.UtcNow;
-
-            // Echo the message to another topic
-            EchoMessage echo = new()
+            if (!string.IsNullOrEmpty(payload))
             {
-                ClientId = _config.MqttConfig.ClientId,
-                OriginalMessage = message,
-                DestinationTopic = _config.MqttConfig.EchoTopic,
-                ReceiveTimestamp = receiveTime,
-                EchoTimestamp = echoTime,
-                SourceTopic = eventArgs.ApplicationMessage.Topic,
-                SourceToEchoDiff = echoTime - message.SourceTimestamp,
-                SourceToEchoMillesconds = (echoTime - message.SourceTimestamp).TotalMilliseconds,
-                Id = message.Id,
-                IsProcessingSimulated = _config.ProcessingDelayInMilliseconds != 0
-            };
+                Message message = JsonSerializer.Deserialize<Message>(payload, _jsonOptions)!;
+                //Simulate Processing Time
+                await Task.Delay(_config.ProcessingDelayInMilliseconds);
 
-            Console.WriteLine($"{DateTime.UtcNow}\tEchoing message: {JsonSerializer.Serialize(echo)}");
-            Console.WriteLine();
-            await PublishEchoMessageAsync(echo);
+                DateTime echoTime = DateTime.UtcNow;
+
+                // Echo the message to another topic
+                EchoMessage echo = new()
+                {
+                    ClientId = _config.MqttConfig.ClientId,
+                    OriginalMessage = message,
+                    DestinationTopic = _config.MqttConfig.EchoTopic,
+                    ReceiveTimestamp = receiveTime,
+                    EchoTimestamp = echoTime,
+                    SourceTopic = eventArgs.ApplicationMessage.Topic,
+                    SourceToEchoDiff = echoTime - message.SourceTimestamp,
+                    SourceToEchoMillesconds = (echoTime - message.SourceTimestamp).TotalMilliseconds,
+                    SequenceId = message.SequenceId,
+                    BatchId = message.BatchId,
+                    IsProcessingSimulated = _config.ProcessingDelayInMilliseconds != 0
+                };
+
+                _ = Task.Run(async () =>
+                {
+                    await PublishEchoMessageAsync(echo);
+                }, _cancellationToken);
+            }
+            else
+            {
+                Console.Error.WriteLine("Payload is empty");
+            }
         }
-        else
-        {
-            Console.Error.WriteLine("Payload is empty");
-        }
+        _ = Task.Run(ProcessMessageAsync, _cancellationToken);
     }
 
     private async Task PublishEchoMessageAsync(EchoMessage echoMessage)
-    {
+    { 
         var payload = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(echoMessage));
 
         var appMessage = new MqttApplicationMessageBuilder()
@@ -111,6 +122,17 @@ internal class MqttManager
             .Build();
 
         await _mqttClient.EnqueueAsync(appMessage);
+
+        if (_uptimeWatch.Elapsed.TotalSeconds % 60 == 0 && !_config.ShowConsoleEchoes)
+        {
+            Console.WriteLine($"[{DateTime.UtcNow}]\tUptime: {_uptimeWatch.Elapsed.TotalSeconds} seconds. Echoing messages is working OK.");
+            Console.WriteLine($"{DateTime.UtcNow}\tLast echoed message: {JsonSerializer.Serialize(echoMessage)}");
+        }
+        else if (_config.ShowConsoleEchoes)
+        {
+            Console.WriteLine($"{DateTime.UtcNow}\tEchoing message: {JsonSerializer.Serialize(echoMessage)}");
+            Console.WriteLine();
+        }
     }
 
     public async Task PublishMessageAsync(Message message)

@@ -14,6 +14,7 @@ internal class EchoMessage
     public Message OriginalMessage { get; set; } = default!;
     public TimeSpan SourceToEchoDiff { get; set; }
     public double SourceToEchoMillesconds { get; set; }
-    public int Id { get; set; }
+    public Guid BatchId { get; set; }
+    public int SequenceId { get; set; }
     public bool IsProcessingSimulated { get; set; }
 }

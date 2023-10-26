@@ -5,8 +5,10 @@ internal class AppConfig
 {
     public MqttConfig MqttConfig { get; set; } = new MqttConfig();
     public int ProcessingDelayInMilliseconds { get; set; } = 0;
+    public int PublishingIntervalInMilliseconds { get; set; } = 1000;
     public bool Publisher { get; set; } = true;
     public bool Suscriber { get; set; } = true;
+    public bool ShowConsoleEchoes { get; set; } = false;
 }
 
 internal class AppConfigProvider
