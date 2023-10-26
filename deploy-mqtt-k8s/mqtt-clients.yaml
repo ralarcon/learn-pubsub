@@ -1,15 +1,79 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: mqtt-loopback
+  name: mqtt-client1-loopback
   namespace: pubsub-tests
 spec:
   containers:
-  - name: mqtt-loopback-client
+  - name: mqtt-client1-loopback
     image: ragcdevacr.azurecr.io/mqttechoclient:latest
     envFrom:
     - configMapRef:
-        name: mqtt-loopback-config
+        name: mqtt-client1-loopback-config
   restartPolicy: OnFailure
   imagePullSecrets:
   - name: ragcdevacr-pull-secret
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mqtt-client2-pub
+  namespace: pubsub-tests
+spec:
+  containers:
+  - name: mqtt-client2-pub
+    image: ragcdevacr.azurecr.io/mqttechoclient:latest
+    envFrom:
+    - configMapRef:
+        name: mqtt-client2-pub-config
+  restartPolicy: OnFailure
+  imagePullSecrets:
+  - name: ragcdevacr-pull-secret
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mqtt-client3-pub-transf
+  namespace: pubsub-tests
+spec:
+  containers:
+  - name: mqtt-client3-pub-transf
+    image: ragcdevacr.azurecr.io/mqttechoclient:latest
+    envFrom:
+    - configMapRef:
+        name: mqtt-client3-pub-transf-config
+  restartPolicy: OnFailure
+  imagePullSecrets:
+  - name: ragcdevacr-pull-secret  
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mqtt-client4-sub
+  namespace: pubsub-tests
+spec:
+  containers:
+  - name: mqtt-client4-sub
+    image: ragcdevacr.azurecr.io/mqttechoclient:latest
+    envFrom:
+    - configMapRef:
+        name: mqtt-client4-sub-config
+  restartPolicy: OnFailure
+  imagePullSecrets:
+  - name: ragcdevacr-pull-secret    
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mqtt-client5-sub-transf
+  namespace: pubsub-tests
+spec:
+  containers:
+  - name: mqtt-client5-sub-transf
+    image: ragcdevacr.azurecr.io/mqttechoclient:latest
+    envFrom:
+    - configMapRef:
+        name: mqtt-client5-sub-transf-config
+  restartPolicy: OnFailure
+  imagePullSecrets:
+  - name: ragcdevacr-pull-secret    

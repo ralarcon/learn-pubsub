@@ -1,10 +1,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mqtt-loopback-config
+  name: mqtt-client1-loopback-config
+  namespace: pubsub-tests
 data:
   AppConfig__MqttConfig__ClientId: "Client1-Loopback"
-  AppConfig__MqttConfig__MqttServer:  "20.199.46.156"
+  AppConfig__MqttConfig__MqttServer:  "azedge-dmqtt-frontend.alice-springs.svc.cluster.local"
   AppConfig__MqttConfig__MqttPort:  "1883"
   AppConfig__MqttConfig__PublishTopic: "pubsub-tests/Client1-Loopback/out"
   AppConfig__MqttConfig__SubscribeTopic: "pubsub-tests/Client1-Loopback/out"
@@ -16,49 +17,57 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mqtt-publisher-config
+  name: mqtt-client2-pub-config
+  namespace: pubsub-tests
 data:
-  AppConfig__MqttConfig__ClientId: "Client2-Publisher"
-  AppConfig__MqttConfig__MqttServer:  "20.199.46.156"
+  AppConfig__MqttConfig__ClientId: "Client2-Pub"
+  AppConfig__MqttConfig__MqttServer:  "azedge-dmqtt-frontend.alice-springs.svc.cluster.local"
   AppConfig__MqttConfig__MqttPort:  "1883"
-  AppConfig__MqttConfig__PublishTopic: "pubsub-tests/Client2-Publisher/out"
+  AppConfig__MqttConfig__PublishTopic: "pubsub-tests/Client2-Pub/out"
   AppConfig__ProcessingDelayInMilliseconds: "0"
   AppConfig__Publisher: "true"
+  AppConfig__Subscriber: "false"
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mqtt-publisher-transform-config
+  name: mqtt-client3-pub-transf-config
+  namespace: pubsub-tests
 data:
-  AppConfig__MqttConfig__ClientId: "Client3-PubTransf"
-  AppConfig__MqttConfig__MqttServer:  "20.199.46.156"
+  AppConfig__MqttConfig__ClientId: "Client3-Pub-Transf"
+  AppConfig__MqttConfig__MqttServer:  "azedge-dmqtt-frontend.alice-springs.svc.cluster.local"
   AppConfig__MqttConfig__MqttPort:  "1883"
-  AppConfig__MqttConfig__PublishTopic: "pubsub-tests/Client3-PubTransf/out"
+  AppConfig__MqttConfig__PublishTopic: "pubsub-tests/Client3-Pub-Transf/out"
   AppConfig__ProcessingDelayInMilliseconds: "0"
   AppConfig__Publisher: "true"
+  AppConfig__Subscriber: "false"
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mqtt-subscriber-config
+  name: mqtt-client4-sub-config
+  namespace: pubsub-tests
 data:
-  AppConfig__MqttConfig__ClientId: "Client4-Subscriber"
-  AppConfig__MqttConfig__MqttServer:  "20.199.46.156"
+  AppConfig__MqttConfig__ClientId: "Client4-Sub"
+  AppConfig__MqttConfig__MqttServer:  "azedge-dmqtt-frontend.alice-springs.svc.cluster.local"
   AppConfig__MqttConfig__MqttPort:  "1883"
-  AppConfig__MqttConfig__SubscribeTopic: "pubsub-tests/Client2-Publisher/out"
-  AppConfig__MqttConfig__EchoTopic: "pubsub-tests/echos/Client4-Subscriber"
+  AppConfig__MqttConfig__SubscribeTopic: "pubsub-tests/Client2-Pub/out"
+  AppConfig__MqttConfig__EchoTopic: "pubsub-tests/echos/Client4-Sub"
   AppConfig__ProcessingDelayInMilliseconds: "0"
   AppConfig__Subscriber: "true"
+  AppConfig__Publisher: "false"
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mqtt-subscriber-transform-config
+  name: mqtt-client5-sub-transf-config
+  namespace: pubsub-tests
 data:
-  AppConfig__MqttConfig__ClientId: "Client5-SubTransf"
-  AppConfig__MqttConfig__MqttServer:  "20.199.46.156"
+  AppConfig__MqttConfig__ClientId: "Client5-Sub-Transf"
+  AppConfig__MqttConfig__MqttServer:  "azedge-dmqtt-frontend.alice-springs.svc.cluster.local"
   AppConfig__MqttConfig__MqttPort:  "1883"
-  AppConfig__MqttConfig__SubscribeTopic: "pubsub-tests/Client3-PubTransf/out"
-  AppConfig__MqttConfig__EchoTopic: "pubsub-tests/echos/Client5-SubTransf"
+  AppConfig__MqttConfig__SubscribeTopic: "pubsub-tests/transforms/Client3-Pub-Transf/out"
+  AppConfig__MqttConfig__EchoTopic: "pubsub-tests/echos/Client5-Sub-Transf"
   AppConfig__ProcessingDelayInMilliseconds: "0"
-  AppConfig__Subscriber: "true" 
+  AppConfig__Subscriber: "true"
+  AppConfig__Publisher: "false"
