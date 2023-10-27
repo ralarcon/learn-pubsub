@@ -76,3 +76,17 @@ data:
   AppConfig__Subscriber: "true"
   AppConfig__Publisher: "false"
   AppConfig__ShowConsoleEchoes: "false"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mqtt-client-pubsub-replicaset-config
+  namespace: pubsub-tests
+data:
+  AppConfig__MqttConfig__MqttServer:  "azedge-dmqtt-frontend.alice-springs.svc.cluster.local"
+  AppConfig__MqttConfig__MqttPort:  "1883"
+  AppConfig__ProcessingDelayInMilliseconds: "0"
+  AppConfig__Publisher: "true"
+  AppConfig__Subscriber: "true"
+  AppConfig__ShowConsoleEchoes: "false"
+  AppConfig__AutoConfigurePubSub: "true"

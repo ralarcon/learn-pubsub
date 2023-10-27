@@ -30,6 +30,7 @@ internal class MqttManager
             .WithClientOptions(new MqttClientOptionsBuilder()
                 .WithClientId(_config.MqttConfig.ClientId)
                 .WithTcpServer(_config.MqttConfig.MqttServer, _config.MqttConfig.MqttPort)
+                .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                 .WithCredentials("", "")
                 .Build())
             .Build();
@@ -124,15 +125,14 @@ internal class MqttManager
 
         await _mqttClient.EnqueueAsync(appMessage);
 
-        if (_aliveWatch.Elapsed.TotalSeconds % 60 > 0 && !_config.ShowConsoleEchoes)
+        if (_aliveWatch.Elapsed.TotalSeconds > 60 && !_config.ShowConsoleEchoes)
         {
-            Console.WriteLine($"[{DateTime.UtcNow}]\tUptime: {_aliveWatch.Elapsed.TotalSeconds} seconds. Echoing messages is working OK.");
-            Console.WriteLine($"[{DateTime.UtcNow}]\t\tLast echoed message: {JsonSerializer.Serialize(echoMessage)}");
+            Console.WriteLine($"[{DateTime.UtcNow}]\tEchoing messages to configured Echo topic: {_config.MqttConfig.EchoTopic} ");
             _aliveWatch.Restart();
         }
         else if (_config.ShowConsoleEchoes)
         {
-            Console.WriteLine($"[{ DateTime.UtcNow}]\tEchoing message: {JsonSerializer.Serialize(echoMessage)}");
+            Console.WriteLine($"[{DateTime.UtcNow}]\tEchoing message: {JsonSerializer.Serialize(echoMessage)}");
             Console.WriteLine();
         }
     }

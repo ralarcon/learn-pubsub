@@ -50,9 +50,9 @@ while (true && !cancellationTokenSource.IsCancellationRequested)
         };
         sequence++;
         await mqttManager.PublishMessageAsync(message);
-        if (aliveWatch.Elapsed.TotalSeconds % 60 > 0)
+        if (aliveWatch.Elapsed.TotalSeconds >= 60)
         {
-            Console.WriteLine($"[{DateTime.UtcNow}]\tUptime: {aliveWatch.Elapsed.TotalSeconds} seconds. Publishing messages to configured topic.");
+            Console.WriteLine($"[{DateTime.UtcNow}]\tPublishing messages to configured topic: {appConfig.MqttConfig.PublishTopic}.");
             aliveWatch.Restart();
         }
     }

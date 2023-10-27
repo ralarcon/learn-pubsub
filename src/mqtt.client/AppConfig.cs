@@ -9,6 +9,7 @@ internal class AppConfig
     public bool Publisher { get; set; } = false;
     public bool Subscriber { get; set; } = false;
     public bool ShowConsoleEchoes { get; set; } = false;
+    public bool AutoConfigurePubSub { get; set; } = false;
 }
 
 internal class AppConfigProvider
@@ -26,6 +27,17 @@ internal class AppConfigProvider
 
         var appConfig = new AppConfig();
         config.GetSection("AppConfig").Bind(appConfig);
+
+        if (appConfig.AutoConfigurePubSub)
+        {
+            Console.WriteLine($"[{DateTime.UtcNow}]\tThe client is configure to setup automatically the 'pubsub' loopback (AutoConfigurePubSub=true)'.");
+            Console.WriteLine($"[{DateTime.UtcNow}]\tIgnoring ClientId & Mqtt Topics from configuration (if any).");
+            string clientId = Environment.MachineName;
+            appConfig.MqttConfig.ClientId = clientId;
+            appConfig.MqttConfig.EchoTopic = $"pubsub-tests/replicas/echoes/{clientId}";
+            appConfig.MqttConfig.PublishTopic = $"pubsub-tests/replicas/{clientId}/out";
+            appConfig.MqttConfig.SubscribeTopic = $"pubsub-tests/replicas/{clientId}/out";
+        }
 
         return appConfig;
     }

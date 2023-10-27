@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mqtt-mosquitto2-pub
+  namespace: pubsub-tests
+spec:
+  containers:
+  - name: mqtt-mosquitto2-pub
+    image: ragcdevacr.azurecr.io/mqttechoclient:latest
+    envFrom:
+    - configMapRef:
+        name: mqtt-mosquitto2-pub-config
+  restartPolicy: OnFailure
+  imagePullSecrets:
+  - name: ragcdevacr-pull-secret
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mqtt-mosquitto4-sub
+  namespace: pubsub-tests
+spec:
+  containers:
+  - name: mqtt-mosquitto4-sub
+    image: ragcdevacr.azurecr.io/mqttechoclient:latest
+    envFrom:
+    - configMapRef:
+        name: mqtt-mosquitto4-sub-config
+  restartPolicy: OnFailure
+  imagePullSecrets:
+  - name: ragcdevacr-pull-secret

@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: mqtt-client-pubsub-replicaset
+  namespace: pubsub-tests
+spec:
+  replicas: 3  # Set the desired number of replicas
+  selector:
+    matchLabels:
+      app: mqtt-client-pubsub
+  template:
+    metadata:
+      labels:
+        app: mqtt-client-pubsub
+    spec:
+      containers:
+      - name: mqtt-client-pubsub
+        image: ragcdevacr.azurecr.io/mqttechoclient:latest
+        envFrom:
+        - configMapRef:
+            name: mqtt-client-pubsub-replicaset-config
+      imagePullSecrets:
+      - name: ragcdevacr-pull-secret
