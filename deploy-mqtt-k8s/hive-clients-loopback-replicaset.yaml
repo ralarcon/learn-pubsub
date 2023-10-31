@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: hive-client-pubsub-replicaset
+  namespace: pubsub-tests
+spec:
+  replicas: 3  # Set the desired number of replicas
+  selector:
+    matchLabels:
+      app: hive-client-pubsub
+  template:
+    metadata:
+      labels:
+        app: hive-client-pubsub
+    spec:
+      containers:
+      - name: hive-client-pubsub
+        image: ragcdevacr.azurecr.io/mqttechoclient:latest
+        envFrom:
+        - configMapRef:
+            name: hive-pubsub-set-config
+      imagePullSecrets:
+      - name: ragcdevacr-pull-secret

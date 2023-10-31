@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hive1-loopback-config
+  namespace: pubsub-tests
+data:
+  AppConfig__MqttConfig__ClientId: "Hive1-Loopback"
+  AppConfig__MqttConfig__MqttServer:  "40.89.130.65"
+  AppConfig__MqttConfig__MqttPort:  "1884"
+  AppConfig__MqttConfig__PublishTopic: "pubsub-tests/Hive1-Loopback/out"
+  AppConfig__MqttConfig__SubscribeTopic: "pubsub-tests/Hive1-Loopback/out"
+  AppConfig__MqttConfig__EchoTopic: "pubsub-tests/echos/Hive1-Loopback"
+  AppConfig__ProcessingDelayInMilliseconds: "0"
+  AppConfig__Publisher: "true"
+  AppConfig__Subscriber: "true"
+  AppConfig__ShowConsoleEchoes: "false"
+  AppConfig__AutoConfigurePubSub: "false"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hive2-pub-config
+  namespace: pubsub-tests
+data:
+  AppConfig__MqttConfig__ClientId: "Hive2-Pub"
+  AppConfig__MqttConfig__MqttServer:  "40.89.130.65"
+  AppConfig__MqttConfig__MqttPort:  "1884"
+  AppConfig__MqttConfig__PublishTopic: "pubsub-tests/Hive2-Pub/out"
+  AppConfig__ProcessingDelayInMilliseconds: "0"
+  AppConfig__Publisher: "true"
+  AppConfig__Subscriber: "false"
+  AppConfig__ShowConsoleEchoes: "false"
+  AppConfig__AutoConfigurePubSub: "false"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hive3-pub-transf-config
+  namespace: pubsub-tests
+data:
+  AppConfig__MqttConfig__ClientId: "Hive3-Pub-Transf"
+  AppConfig__MqttConfig__MqttServer:  "40.89.130.65"
+  AppConfig__MqttConfig__MqttPort:  "1884"
+  AppConfig__MqttConfig__PublishTopic: "pubsub-tests/Hive3-Pub-Transf/out"
+  AppConfig__ProcessingDelayInMilliseconds: "0"
+  AppConfig__Publisher: "true"
+  AppConfig__Subscriber: "false"
+  AppConfig__ShowConsoleEchoes: "false"
+  AppConfig__AutoConfigurePubSub: "false"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hive4-sub-config
+  namespace: pubsub-tests
+data:
+  AppConfig__MqttConfig__ClientId: "Hive4-Sub"
+  AppConfig__MqttConfig__MqttServer:  "40.89.130.65"
+  AppConfig__MqttConfig__MqttPort:  "1884"
+  AppConfig__MqttConfig__SubscribeTopic: "pubsub-tests/Hive2-Pub/out"
+  AppConfig__MqttConfig__EchoTopic: "pubsub-tests/echos/Hive4-Sub"
+  AppConfig__ProcessingDelayInMilliseconds: "0"
+  AppConfig__Subscriber: "true"
+  AppConfig__Publisher: "false"
+  AppConfig__ShowConsoleEchoes: "false"
+  AppConfig__AutoConfigurePubSub: "false"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hive5-sub-transf-config
+  namespace: pubsub-tests
+data:
+  AppConfig__MqttConfig__ClientId: "Hive5-Sub-Transf"
+  AppConfig__MqttConfig__MqttServer:  "40.89.130.65"
+  AppConfig__MqttConfig__MqttPort:  "1884"
+  AppConfig__MqttConfig__SubscribeTopic: "pubsub-tests/transforms/Hive3-Pub-Transf/out"
+  AppConfig__MqttConfig__EchoTopic: "pubsub-tests/echos/Hive5-Sub-Transf"
+  AppConfig__ProcessingDelayInMilliseconds: "0"
+  AppConfig__Subscriber: "true"
+  AppConfig__Publisher: "false"
+  AppConfig__ShowConsoleEchoes: "false"
+  AppConfig__AutoConfigurePubSub: "false"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hive-pubsub-set-config
+  namespace: pubsub-tests
+data:
+  AppConfig__MqttConfig__MqttServer:  "40.89.130.65"
+  AppConfig__MqttConfig__MqttPort:  "1884"
+  AppConfig__ProcessingDelayInMilliseconds: "0"
+  AppConfig__Publisher: "true"
+  AppConfig__Subscriber: "true"
+  AppConfig__ShowConsoleEchoes: "false"
+  AppConfig__AutoConfigurePubSub: "true"
