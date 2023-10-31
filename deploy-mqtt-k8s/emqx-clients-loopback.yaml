@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: emqx1-loopback
+  namespace: pubsub-tests
+spec:
+  containers:
+  - name: emqx1-loopback
+    image: ragcdevacr.azurecr.io/mqttechoclient:latest
+    envFrom:
+    - configMapRef:
+        name: emqx1-loopback-config
+  restartPolicy: OnFailure
+  imagePullSecrets:
+  - name: ragcdevacr-pull-secret

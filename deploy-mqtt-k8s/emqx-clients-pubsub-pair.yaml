@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: emqx2-pub
+  namespace: pubsub-tests
+spec:
+  containers:
+  - name: emqx2-pub
+    image: ragcdevacr.azurecr.io/mqttechoclient:latest
+    envFrom:
+    - configMapRef:
+        name: emqx2-pub-config
+  restartPolicy: OnFailure
+  imagePullSecrets:
+  - name: ragcdevacr-pull-secret
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: emqx4-sub
+  namespace: pubsub-tests
+spec:
+  containers:
+  - name: emqx4-sub
+    image: ragcdevacr.azurecr.io/mqttechoclient:latest
+    envFrom:
+    - configMapRef:
+        name: emqx4-sub-config
+  restartPolicy: OnFailure
+  imagePullSecrets:
+  - name: ragcdevacr-pull-secret

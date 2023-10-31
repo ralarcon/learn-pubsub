@@ -1,91 +1,91 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mqtt-mosquitto1-loopback-config
+  name: emqx1-loopback-config
   namespace: pubsub-tests
 data:
-  AppConfig__MqttConfig__ClientId: "Mosquitto1-Loopback"
+  AppConfig__MqttConfig__ClientId: "Emqx1-Loopback"
   AppConfig__MqttConfig__MqttServer:  "40.89.130.65"
   AppConfig__MqttConfig__MqttPort:  "1884"
-  AppConfig__MqttConfig__PublishTopic: "pubsub-tests/Mosquitto1-Loopback/out"
-  AppConfig__MqttConfig__SubscribeTopic: "pubsub-tests/Mosquitto1-Loopback/out"
-  AppConfig__MqttConfig__EchoTopic: "pubsub-tests/echos/Mosquitto1-Loopback"
+  AppConfig__MqttConfig__PublishTopic: "pubsub-tests/Emqx1-Loopback/out"
+  AppConfig__MqttConfig__SubscribeTopic: "pubsub-tests/Emqx1-Loopback/out"
+  AppConfig__MqttConfig__EchoTopic: "pubsub-tests/echos/Emqx1-Loopback"
   AppConfig__ProcessingDelayInMilliseconds: "0"
   AppConfig__Publisher: "true"
   AppConfig__Subscriber: "true"
   AppConfig__ShowConsoleEchoes: "false"
-  AppConfig__AutoConfigurePubSub: "false"  
+  AppConfig__AutoConfigurePubSub: "false"
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mqtt-mosquitto2-pub-config
+  name: emqx2-pub-config
   namespace: pubsub-tests
 data:
-  AppConfig__MqttConfig__ClientId: "Mosquitto2-Pub"
+  AppConfig__MqttConfig__ClientId: "Emqx2-Pub"
   AppConfig__MqttConfig__MqttServer:  "40.89.130.65"
   AppConfig__MqttConfig__MqttPort:  "1884"
-  AppConfig__MqttConfig__PublishTopic: "pubsub-tests/Mosquitto2-Pub/out"
-  AppConfig__ProcessingDelayInMilliseconds: "0"
-  AppConfig__Publisher: "true"
-  AppConfig__Subscriber: "false"
-  AppConfig__ShowConsoleEchoes: "false"
-  AppConfig__AutoConfigurePubSub: "false"  
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: mqtt-mosquitto3-pub-transf-config
-  namespace: pubsub-tests
-data:
-  AppConfig__MqttConfig__ClientId: "Mosquitto3-Pub-Transf"
-  AppConfig__MqttConfig__MqttServer:  "40.89.130.65"
-  AppConfig__MqttConfig__MqttPort:  "1884"
-  AppConfig__MqttConfig__PublishTopic: "pubsub-tests/Mosquitto3-Pub-Transf/out"
+  AppConfig__MqttConfig__PublishTopic: "pubsub-tests/Emqx2-Pub/out"
   AppConfig__ProcessingDelayInMilliseconds: "0"
   AppConfig__Publisher: "true"
   AppConfig__Subscriber: "false"
   AppConfig__ShowConsoleEchoes: "false"
-  AppConfig__AutoConfigurePubSub: "false"  
+  AppConfig__AutoConfigurePubSub: "false"
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mqtt-mosquitto4-sub-config
+  name: emqx3-pub-transf-config
   namespace: pubsub-tests
 data:
-  AppConfig__MqttConfig__ClientId: "Mosquitto4-Sub"
+  AppConfig__MqttConfig__ClientId: "Emqx3-Pub-Transf"
   AppConfig__MqttConfig__MqttServer:  "40.89.130.65"
   AppConfig__MqttConfig__MqttPort:  "1884"
-  AppConfig__MqttConfig__SubscribeTopic: "pubsub-tests/Mosquitto2-Pub/out"
-  AppConfig__MqttConfig__EchoTopic: "pubsub-tests/echos/Mosquitto4-Sub"
+  AppConfig__MqttConfig__PublishTopic: "pubsub-tests/Emqx3-Pub-Transf/out"
+  AppConfig__ProcessingDelayInMilliseconds: "0"
+  AppConfig__Publisher: "true"
+  AppConfig__Subscriber: "false"
+  AppConfig__ShowConsoleEchoes: "false"
+  AppConfig__AutoConfigurePubSub: "false"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: emqx4-sub-config
+  namespace: pubsub-tests
+data:
+  AppConfig__MqttConfig__ClientId: "Emqx4-Sub"
+  AppConfig__MqttConfig__MqttServer:  "40.89.130.65"
+  AppConfig__MqttConfig__MqttPort:  "1884"
+  AppConfig__MqttConfig__SubscribeTopic: "pubsub-tests/Emqx2-Pub/out"
+  AppConfig__MqttConfig__EchoTopic: "pubsub-tests/echos/Emqx4-Sub"
   AppConfig__ProcessingDelayInMilliseconds: "0"
   AppConfig__Subscriber: "true"
   AppConfig__Publisher: "false"
   AppConfig__ShowConsoleEchoes: "false"
-  AppConfig__AutoConfigurePubSub: "false"  
+  AppConfig__AutoConfigurePubSub: "false"
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mqtt-mosquitto5-sub-transf-config
+  name: emqx5-sub-transf-config
   namespace: pubsub-tests
 data:
-  AppConfig__MqttConfig__ClientId: "Mosquitto5-Sub-Transf"
+  AppConfig__MqttConfig__ClientId: "Emqx5-Sub-Transf"
   AppConfig__MqttConfig__MqttServer:  "40.89.130.65"
   AppConfig__MqttConfig__MqttPort:  "1884"
-  AppConfig__MqttConfig__SubscribeTopic: "pubsub-tests/transforms/Mosquitto3-Pub-Transf/out"
-  AppConfig__MqttConfig__EchoTopic: "pubsub-tests/echos/Mosquitto5-Sub-Transf"
+  AppConfig__MqttConfig__SubscribeTopic: "pubsub-tests/transforms/Emqx3-Pub-Transf/out"
+  AppConfig__MqttConfig__EchoTopic: "pubsub-tests/echos/Emqx5-Sub-Transf"
   AppConfig__ProcessingDelayInMilliseconds: "0"
   AppConfig__Subscriber: "true"
   AppConfig__Publisher: "false"
   AppConfig__ShowConsoleEchoes: "false"
-  AppConfig__AutoConfigurePubSub: "false"  
+  AppConfig__AutoConfigurePubSub: "false"
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mosquitto-client-pubsub-replicaset-config
+  name: emqx-pubsub-set-config
   namespace: pubsub-tests
 data:
   AppConfig__MqttConfig__MqttServer:  "40.89.130.65"
@@ -94,4 +94,4 @@ data:
   AppConfig__Publisher: "true"
   AppConfig__Subscriber: "true"
   AppConfig__ShowConsoleEchoes: "false"
-  AppConfig__AutoConfigurePubSub: "true"  
+  AppConfig__AutoConfigurePubSub: "true"

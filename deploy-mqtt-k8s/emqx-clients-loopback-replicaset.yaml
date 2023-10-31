@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: emqx-client-pubsub-replicaset
+  namespace: pubsub-tests
+spec:
+  replicas: 3  # Set the desired number of replicas
+  selector:
+    matchLabels:
+      app: emqx-client-pubsub
+  template:
+    metadata:
+      labels:
+        app: emqx-client-pubsub
+    spec:
+      containers:
+      - name: emqx-client-pubsub
+        image: ragcdevacr.azurecr.io/mqttechoclient:latest
+        envFrom:
+        - configMapRef:
+            name: emqx-pubsub-set-config
+      imagePullSecrets:
+      - name: ragcdevacr-pull-secret
