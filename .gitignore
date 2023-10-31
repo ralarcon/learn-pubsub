@@ -3,6 +3,11 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Exclude local files
+local.*
+**/local.*
+./deploy-mqtt-k8s/local.configure-k3s-arc-cluster.sh
+
 # User-specific files
 *.rsuser
 *.suo
@@ -396,7 +401,3 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-
-# Exclude local files
-local.*
-**/local.*
