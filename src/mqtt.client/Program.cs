@@ -24,10 +24,10 @@ if (appConfig.Publisher)
 //Prepare application shutdown
 AppDomain.CurrentDomain.ProcessExit += async (s, e) =>
 {
-    Console.WriteLine("Exiting...");
+    Console.WriteLine($"[{DateTime.UtcNow}]\tExiting...");
     await mqttManager.StopMqttClient();
+    Console.WriteLine($"[{DateTime.UtcNow}]\tMQTT client stopped.");
     cancellationTokenSource.Cancel();
-    Console.WriteLine("MQTT client stopped.");
 };
 
 
@@ -59,4 +59,8 @@ while (true && !cancellationTokenSource.IsCancellationRequested)
         }
     }
     await Task.Delay(TimeSpan.FromSeconds(1));
+    if (cancellationTokenSource.IsCancellationRequested)
+    {
+        Console.WriteLine($"[{DateTime.UtcNow}]\tCancellation requested. Finishing EchoClient.");
+    }
 }

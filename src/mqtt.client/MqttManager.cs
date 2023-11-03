@@ -28,9 +28,14 @@ internal class MqttManager
         var options = new ManagedMqttClientOptionsBuilder()
             .WithAutoReconnectDelay(TimeSpan.FromSeconds(5))
             .WithClientOptions(new MqttClientOptionsBuilder()
+                .WithProtocolVersion(MQTTnet.Formatter.MqttProtocolVersion.V500)
                 .WithClientId(_config.MqttConfig.ClientId)
                 .WithTcpServer(_config.MqttConfig.MqttServer, _config.MqttConfig.MqttPort)
-                .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+                .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
+                .WithWillTopic($"clients/{_config.MqttConfig.ClientId}/status")
+                .WithWillMessageExpiryInterval(60)
+                .WithWillRetain(true)
+                .WithWillPayload(Encoding.UTF8.GetBytes($"Client {_config.MqttConfig.ClientId} OFFLINE"))
                 .WithCredentials("", "")
                 .Build())
             .Build();
@@ -68,6 +73,15 @@ internal class MqttManager
     private async Task ClientConnectedAsync(MqttClientConnectedEventArgs eventArgs)
     {
         Console.WriteLine($"[{DateTime.UtcNow}]\tClient {_config.MqttConfig.ClientId} connected to mqtt://{_config.MqttConfig.MqttServer}:{_config.MqttConfig.MqttPort}.");
+
+        var appMessage = new MqttApplicationMessageBuilder()
+            .WithTopic($"clients/{_config.MqttConfig.ClientId}/status")
+            .WithPayload(Encoding.UTF8.GetBytes($"Client {_config.MqttConfig.ClientId} ONLINE"))
+            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
+            .WithRetainFlag(true)
+            .Build();
+        await _mqttClient.EnqueueAsync(appMessage);
+
         if (_config.Subscriber)
         {
             await _mqttClient.SubscribeAsync(_config.MqttConfig.SubscribeTopic);
