@@ -8,16 +8,8 @@ using System.Diagnostics;
 var appConfig = AppConfigProvider.LoadConfiguration();
 
 Console.WriteLine($"[{DateTime.UtcNow}]\tMQTT Echoer: '{appConfig.MqttConfig.ClientId}'");
-
 CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-
 var mqttManager = new MqttManager(appConfig, cancellationTokenSource.Token);
-
-AppDomain.CurrentDomain.ProcessExit += (s, e) =>
-{
-    Console.WriteLine("Exiting...");
-    cancellationTokenSource.Cancel();
-};
 
 if (appConfig.Subscriber)
 {
@@ -28,6 +20,16 @@ if (appConfig.Publisher)
 {
     Console.WriteLine($"[{DateTime.UtcNow}]\tPublishing to '{appConfig.MqttConfig.PublishTopic}'. Message Interval: {appConfig.PublishingIntervalInMilliseconds} msec. Processing delay: {appConfig.ProcessingDelayInMilliseconds} msec.");
 }
+
+//Prepare application shutdown
+AppDomain.CurrentDomain.ProcessExit += async (s, e) =>
+{
+    Console.WriteLine("Exiting...");
+    await mqttManager.StopMqttClient();
+    cancellationTokenSource.Cancel();
+    Console.WriteLine("MQTT client stopped.");
+};
+
 
 // Start the MQTT client
 await mqttManager.StartMqttClient();

@@ -42,6 +42,23 @@ internal class MqttManager
         await _mqttClient.StartAsync(options);
     }
 
+    public async Task StopMqttClient()
+    {
+        await _mqttClient.UnsubscribeAsync(_config.MqttConfig.SubscribeTopic);
+        Console.WriteLine($"[{DateTime.UtcNow}]\tClient {_config.MqttConfig.ClientId} UNsubscribed from {_config.MqttConfig.SubscribeTopic}.");
+        await _mqttClient.StopAsync();
+    }
+    public async Task PublishMessageAsync(Message message)
+    {
+        var payload = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+        var appMessage = new MqttApplicationMessageBuilder()
+            .WithTopic(_config.MqttConfig.PublishTopic)
+            .WithPayload(payload)
+            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+            .Build();
+
+        await _mqttClient.EnqueueAsync(appMessage);
+    }
     private async Task ConnectingFailedAsync(ConnectingFailedEventArgs eventArgs)
     {
         Console.WriteLine($"[{DateTime.UtcNow}]\tClient {_config.MqttConfig.ClientId} FAILED to connected to mqtt://{_config.MqttConfig.MqttServer}:{_config.MqttConfig.MqttPort}. Exception:\n{eventArgs.Exception}");
@@ -61,6 +78,7 @@ internal class MqttManager
             Console.WriteLine($"[{DateTime.UtcNow}]\tSkipping subscription to configured topic (if any). Client not configured to subscribe to topic.");
         }
     }
+
 
     private async Task ClientDisconnectedAsync(MqttClientDisconnectedEventArgs eventArgs)
     {
@@ -135,17 +153,5 @@ internal class MqttManager
             Console.WriteLine($"[{DateTime.UtcNow}]\tEchoing message: {JsonSerializer.Serialize(echoMessage)}");
             Console.WriteLine();
         }
-    }
-
-    public async Task PublishMessageAsync(Message message)
-    {
-        var payload = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
-        var appMessage = new MqttApplicationMessageBuilder()
-            .WithTopic(_config.MqttConfig.PublishTopic)
-            .WithPayload(payload)
-            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
-            .Build();
-
-        await _mqttClient.EnqueueAsync(appMessage);
     }
 }
