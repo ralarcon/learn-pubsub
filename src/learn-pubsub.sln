@@ -1,0 +1,51 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34202.233
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B2F34389-EA5F-4622-9ADC-46482CC59309}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mqtt.EchoClient", "Mqtt.EchoClient\Mqtt.EchoClient.csproj", "{CC9ABE0C-AD0B-4069-B762-5BB0BC879264}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mqtt.ConveyorSimulator", "Mqtt.ConveyorSimulator\Mqtt.ConveyorSimulator.csproj", "{FECC7793-99D0-4086-A69B-3715F3FD461A}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{C62B469A-9BA5-46DF-8879-0FAD06452942}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mqtt.Shared", "Mqtt.Shared\Mqtt.Shared.csproj", "{06CE3FD6-D32E-4ED8-831C-CF0628D6DECA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mqtt.ItemGenerator", "Mqtt.ItemGenerator\Mqtt.ItemGenerator.csproj", "{36F1E97A-20EC-4DD1-8320-1E90A0AD5032}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CC9ABE0C-AD0B-4069-B762-5BB0BC879264}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC9ABE0C-AD0B-4069-B762-5BB0BC879264}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC9ABE0C-AD0B-4069-B762-5BB0BC879264}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC9ABE0C-AD0B-4069-B762-5BB0BC879264}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FECC7793-99D0-4086-A69B-3715F3FD461A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FECC7793-99D0-4086-A69B-3715F3FD461A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FECC7793-99D0-4086-A69B-3715F3FD461A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FECC7793-99D0-4086-A69B-3715F3FD461A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C62B469A-9BA5-46DF-8879-0FAD06452942}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C62B469A-9BA5-46DF-8879-0FAD06452942}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C62B469A-9BA5-46DF-8879-0FAD06452942}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C62B469A-9BA5-46DF-8879-0FAD06452942}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06CE3FD6-D32E-4ED8-831C-CF0628D6DECA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06CE3FD6-D32E-4ED8-831C-CF0628D6DECA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06CE3FD6-D32E-4ED8-831C-CF0628D6DECA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06CE3FD6-D32E-4ED8-831C-CF0628D6DECA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36F1E97A-20EC-4DD1-8320-1E90A0AD5032}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36F1E97A-20EC-4DD1-8320-1E90A0AD5032}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36F1E97A-20EC-4DD1-8320-1E90A0AD5032}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36F1E97A-20EC-4DD1-8320-1E90A0AD5032}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6FBD3CCE-486D-45D2-A036-7B997518AEC0}
+	EndGlobalSection
+EndGlobal

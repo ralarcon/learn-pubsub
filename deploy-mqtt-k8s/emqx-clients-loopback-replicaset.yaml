@@ -4,7 +4,7 @@ metadata:
   name: emqx-client-pubsub-replicaset
   namespace: pubsub-tests
 spec:
-  replicas: 3  # Set the desired number of replicas
+  replicas: 20  # Set the desired number of replicas
   selector:
     matchLabels:
       app: emqx-client-pubsub

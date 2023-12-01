@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Mqtt.ItemGenerator": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

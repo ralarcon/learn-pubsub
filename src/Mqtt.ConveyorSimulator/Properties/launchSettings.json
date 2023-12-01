@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Mqtt.ConveyorSimulator": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+version: '3.4'
+
+services:
+    mosquitto:
+        image: eclipse-mosquitto
+        container_name: mosquitto-container
+        ports:
+            - "1883:1883"
+            - "9001:9001"
+        volumes:
+            - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+            - /mosquitto/data
+            - /mosquitto/log
+
+    mqtt.itemGenerator:
+        image: ${DOCKER_REGISTRY-}mqttitemgenerator
+        container_name: item-generator
+        build:
+            context: .
+            dockerfile: Mqtt.ItemGenerator/Dockerfile
+
+    mqtt.conveyorSimulator:
+        image: ${DOCKER_REGISTRY-}mqttconveyorsimulator
+        container_name: conveyor-simulator
+        build:
+            context: .
+            dockerfile: Mqtt.ConveyorSimulator/Dockerfile

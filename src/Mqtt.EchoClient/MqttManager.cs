@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 internal class MqttManager
 {
@@ -21,6 +22,7 @@ internal class MqttManager
         _mqttClient = new MqttFactory().CreateManagedMqttClient();
         _cancellationToken = cancellationToken;
         _jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.General);
+        _jsonOptions.Converters.Add(new JsonStringEnumConverter());
     }
 
     public async Task StartMqttClient()
