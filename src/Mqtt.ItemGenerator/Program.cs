@@ -32,7 +32,7 @@ if (config.EnableTermination)
 {
     Console.WriteLine($"[{DateTime.UtcNow}]\tItem Termination Zone: '{config.TerminationZone}'.");
     ItemTerminator terminator = new(config, mqttManager);
-    await terminator.StartTerminatingItems();
+    await terminator.StartTerminatingItemsAsync();
 }
 
 if (config.EnableGeneration)

@@ -12,6 +12,7 @@ namespace Mqtt.ItemGenerator
         public int MaxItems { get; set; } = 0; //Zero or negative == infinite
         public string GenerationZone { get; set; } = default!;
         public string TerminationZone { get; set; } = default!;
+        public int TerminationRetentionMilliseconds { get; set; } = default!;
         public int SimulationStartDelayMilliseconds { get; set; } = 5000;
         public bool EnableTermination { get; set; } = true;
         public bool EnableGeneration { get; set; } = true;

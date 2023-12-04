@@ -20,7 +20,7 @@ namespace Mqtt.ConveyorSimulator
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _mqttManager = mqttManager?? throw new ArgumentNullException(nameof(mqttManager));
-            _junctions = new JunctionsSet(config, mqttManager, "c_");
+            _junctions = new JunctionsSet(config, mqttManager);
             PrepareConveyors();
         }
 
@@ -48,7 +48,7 @@ namespace Mqtt.ConveyorSimulator
         {
             for (int junctionId = 0; junctionId < _conveyors.Count - 1; junctionId++)
             {
-                var junction = _junctions.CreateJunction(_conveyors[junctionId].OutTopic, _conveyors[junctionId + 1].InTopic);
+                var junction = _junctions.CreateJunction(_conveyors[junctionId].OutTopic, _conveyors[junctionId + 1].InTopic, _conveyors[junctionId].Id, _conveyors[junctionId+1].Id);
             }
         }
 

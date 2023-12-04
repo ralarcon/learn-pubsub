@@ -27,9 +27,9 @@ namespace Mqtt.ConveyorSimulator
             _prefix = prefix;
         }
 
-        public Junction CreateJunction(string sourceTopic, string destinationTopic)
+        public Junction CreateJunction(string sourceTopic, string destinationTopic, string sourceName, string destinationName)
         {
-            var junction = new Junction(_junctions.Count+1, $"{_config.Zone}", sourceTopic, destinationTopic, _mqttManager, _config.JunctionDelayMilliseconds, _prefix);
+            var junction = new Junction(_junctions.Count+1, $"{_config.Zone}", sourceTopic, destinationTopic, sourceName, destinationName, _mqttManager, _config.JunctionDelayMilliseconds, _prefix);
             _junctions.Add(junction);
             return junction;
         }
@@ -57,9 +57,9 @@ namespace Mqtt.ConveyorSimulator
         private int _transits = 0;
         private bool _connected = false;
 
-        public Junction(int instance, string zone, string sourceTopic,  string destinationTopic, MqttManager mqttManager, int interconnectionDelayMilliseconds=0, string idPrefix = "")
+        public Junction(int instance, string zone, string sourceTopic,  string destinationTopic, string sourceName, string destinationName, MqttManager mqttManager, int interconnectionDelayMilliseconds=0, string idPrefix = "")
         {
-            _id = $"{idPrefix}{zone}_j{instance}";
+            _id = $"j{instance}_{idPrefix}{sourceName}_to_{destinationName}";
             _zone = zone;
             _sourceTopic = sourceTopic;
             _destinationTopic = destinationTopic;
