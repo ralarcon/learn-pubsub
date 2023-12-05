@@ -20,7 +20,7 @@ namespace Mqtt.ConveyorSimulator
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _mqttManager = mqttManager?? throw new ArgumentNullException(nameof(mqttManager));
-            _junctions = new JunctionsSet(config, mqttManager);
+            _junctions = new JunctionsSet(config, mqttManager, _config.Zone+"_");
             PrepareConveyors();
         }
 

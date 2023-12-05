@@ -47,7 +47,7 @@ ConveyorSystem conveyors = new ConveyorSystem(config, mqttManager);
 //Prepare Inter-Zone Junctions
 JunctionsSet intertZoneJunctions = new(config, mqttManager);
 Junction previousZoneConnection = intertZoneJunctions.CreateJunction(TopicsDefinition.Items(config.SourceZone), TopicsDefinition.ConveyorSensor(config.Zone, conveyors.Conveyors.First().Id, nameof(ConveyorSensor.In)), "wh", config.SourceZone);
-Junction nextZoneConnection = intertZoneJunctions.CreateJunction(TopicsDefinition.ConveyorSensor(config.Zone, conveyors.Conveyors.Last().Id, nameof(ConveyorSensor.Out)), TopicsDefinition.Items(config.DestinationZone), config.SourceZone, config.DestinationZone);
+Junction nextZoneConnection = intertZoneJunctions.CreateJunction(TopicsDefinition.ConveyorSensor(config.Zone, conveyors.Conveyors.Last().Id, nameof(ConveyorSensor.Out)), TopicsDefinition.Items(config.DestinationZone), "wh", config.DestinationZone);
 await intertZoneJunctions.StartSimulationAsync();
 
 await conveyors.StartSimulationAsync();
