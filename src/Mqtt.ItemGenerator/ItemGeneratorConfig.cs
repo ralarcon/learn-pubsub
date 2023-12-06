@@ -16,5 +16,7 @@ namespace Mqtt.ItemGenerator
         public int SimulationStartDelayMilliseconds { get; set; } = 5000;
         public bool EnableTermination { get; set; } = true;
         public bool EnableGeneration { get; set; } = true;
+        public bool EnableBridgeToIoTMQ { get; set; } = false;
+        public string IoTMqTopic { get; set; } = default!;
     }
 }

@@ -76,14 +76,17 @@ public class MqttManager
     }
     public async Task PublishStatusAsync(byte[] payload, string topic)
     {
-        var appMessage = new MqttApplicationMessageBuilder()
-            .WithTopic(topic)
-            .WithPayload(payload)
-            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
-            .WithRetainFlag(true)
-            .Build();
+        if (_config.TrackStatus)
+        {
+            var appMessage = new MqttApplicationMessageBuilder()
+                .WithTopic(topic)
+                .WithPayload(payload)
+                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
+                .WithRetainFlag(true)
+                .Build();
 
-        await _mqttClient.EnqueueAsync(appMessage);
+            await _mqttClient.EnqueueAsync(appMessage);
+        }
     }
 
     public async Task RemoveStatusAsync(string topic)

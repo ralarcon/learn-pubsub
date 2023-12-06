@@ -29,5 +29,12 @@ namespace Mqtt.Shared
             _config.GetSection(instance.GetType().Name).Bind(instance);
             return instance;
         }
+
+        public static T LoadConfiguration<T>(string section) where T : class, new()
+        {
+            T instance = new();
+            _config.GetSection(section).Bind(instance);
+            return instance;
+        }
     }
 }

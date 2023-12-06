@@ -17,46 +17,127 @@ namespace Mqtt.Shared
             Converters = { new JsonStringEnumConverter() },
         };
 
-        public static async Task<string> ToJsonStringAsync(this object obj)
+        //public static async Task<string> ToJsonStringAsync(this object obj)
+        //{
+        //    if (obj == null) return await Task.FromResult(string.Empty);
+
+        //    using (MemoryStream stream = new())
+        //    {
+        //        await JsonSerializer.SerializeAsync(stream, obj, obj.GetType(), _jsonOptions);
+        //        return Encoding.UTF8.GetString(stream.ToArray());
+        //    }
+        //}
+        //public static async Task<T> DeserializeAsync<T>(this string payload) where T : class, new()
+        //{
+        //    if (string.IsNullOrEmpty(payload)) return await Task.FromResult(new T());
+
+        //    using (MemoryStream stream = new(Encoding.UTF8.GetBytes(payload)))
+        //    {
+        //        var result = await JsonSerializer.DeserializeAsync<T>(stream, _jsonOptions);
+        //        return result ?? new T();
+        //    }
+        //}
+
+        public static byte[] ToUtf8Bytes(this object obj)
         {
-            if (obj == null) return await Task.FromResult(string.Empty);
+            if (obj == null) return new byte[] { };
+            return JsonSerializer.SerializeToUtf8Bytes(obj, obj.GetType());
+        }
+
+
+        public static T Deserialize<T>(this byte[] payload) where T : class, new()
+        {
+            if (payload == null) return new T();
+
+            var result = JsonSerializer.Deserialize<T>(utf8Json: payload)!;
+            return result ?? new T();
+        }
+
+        public static byte[] ToItemBytes(this Item item)
+        {
+            if (item == null) return new byte[] { };
 
             using (MemoryStream stream = new())
             {
-                await JsonSerializer.SerializeAsync(stream, obj, obj.GetType(), _jsonOptions);
-                return Encoding.UTF8.GetString(stream.ToArray());
+                return JsonSerializer.SerializeToUtf8Bytes(item, ItemJsonContext.Default.Item);
             }
         }
-        public static async Task<T> DeserializeAsync<T>(this string payload) where T : class, new()
-        {
-            if (string.IsNullOrEmpty(payload)) return await Task.FromResult(new T());
 
-            using (MemoryStream stream = new(Encoding.UTF8.GetBytes(payload)))
-            {
-                var result = await JsonSerializer.DeserializeAsync<T>(stream, _jsonOptions);
-                return result ?? new T();
-            }
-        }
-        public static async Task<byte[]> ToJsonByteArrayAsync(this object obj)
+        public static Item DeserializeItem(this byte[] payload)
         {
-            if (obj == null) return await Task.FromResult(new byte[] { });
+            if (payload == null) return new Item();
 
             using (MemoryStream stream = new())
             {
-                await JsonSerializer.SerializeAsync(stream, obj, obj.GetType(), _jsonOptions);
-                return stream.ToArray();
+                return JsonSerializer.Deserialize(utf8Json: payload, jsonTypeInfo: ItemJsonContext.Default.Item)!;
             }
         }
-        public static async Task<T> DeserializeAsync<T>(this byte[] payload) where T : class, new()
+
+        public static string ToItemString(this Item item)
         {
-            if (payload == null) return await Task.FromResult(new T());
+            if (item == null) return string.Empty;
 
-            using (MemoryStream stream = new(payload))
+            using (MemoryStream stream = new())
             {
-                var result = await JsonSerializer.DeserializeAsync<T>(stream, _jsonOptions);
-                return result ?? new T();
+                return Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(item, ItemJsonContext.Default.Item));
             }
         }
 
+        public static Item DeserilizeItem(this string payload)
+        {
+            if (payload == null) return new Item();
+
+            using (MemoryStream stream = new())
+            {
+                var payloadBytes = Encoding.UTF8.GetBytes(payload);
+                return JsonSerializer.Deserialize(utf8Json: payloadBytes, jsonTypeInfo: ItemJsonContext.Default.Item)!;
+            }
+        }
+
+
+
+
+
+
+        public static byte[] ToItemPositionBytes(this ItemPosition item)
+        {
+            if (item == null) return new byte[] { };
+
+            using (MemoryStream stream = new())
+            {
+                return JsonSerializer.SerializeToUtf8Bytes(item, ItemPositionJsonContext.Default.ItemPosition);
+            }
+        }
+
+        public static ItemPosition DeserilizeItemPosition(this byte[] payload)
+        {
+            if (payload == null) return new ItemPosition();
+
+            using (MemoryStream stream = new())
+            {
+                return JsonSerializer.Deserialize(utf8Json: payload, jsonTypeInfo: ItemPositionJsonContext.Default.ItemPosition)!;
+            }
+        }
+
+        public static string ToItemPositionString(this ItemPosition item)
+        {
+            if (item == null) return string.Empty;
+
+            using (MemoryStream stream = new())
+            {
+                return Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(item, ItemPositionJsonContext.Default.ItemPosition));
+            }
+        }
+
+        public static ItemPosition DeserilizeItemPosition(this string payload)
+        {
+            if (payload == null) return new ItemPosition();
+
+            using (MemoryStream stream = new())
+            {
+                var payloadBytes = Encoding.UTF8.GetBytes(payload);
+                return JsonSerializer.Deserialize(utf8Json: payloadBytes, jsonTypeInfo: ItemPositionJsonContext.Default.ItemPosition)!;
+            }
+        }
     }
 }

@@ -5,31 +5,31 @@ using System.Security.Authentication;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Mqtt.ConveyorSimulator
+namespace Mqtt.ZoneSimulator
 {
     public class ConveyorSystem
     {
-        private readonly ConveyorSimulatorConfig _config;
+        private readonly ZoneSimulatorConfig _config;
         private readonly MqttManager _mqttManager;
-        private readonly JunctionsSet _junctions;
+        private readonly PositionSet _positions;
 
         private List<Conveyor> _conveyors = new();
         
 
-        public ConveyorSystem(ConveyorSimulatorConfig config, MqttManager mqttManager)
+        public ConveyorSystem(ZoneSimulatorConfig config, MqttManager mqttManager)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _mqttManager = mqttManager?? throw new ArgumentNullException(nameof(mqttManager));
-            _junctions = new JunctionsSet(config, mqttManager, _config.Zone+"_");
+            _positions = new PositionSet(config, mqttManager);
             PrepareConveyors();
         }
 
         public List<Conveyor> Conveyors => _conveyors;
-        public List<Junction> Junctions => _junctions.Junctions;
+        public List<Position> Positions => _positions.Positions;
 
         private void PrepareConveyors()
         {
-            Console.WriteLine($"[{DateTime.UtcNow}]\tPreparing {_config.NumConveyors} conveyors; Transit Delay: {_config.ConveyorTransitMilliseconds}; Junction Delay: {_config.JunctionDelayMilliseconds}.");
+            Console.WriteLine($"[{DateTime.UtcNow}]\tPreparing {_config.NumConveyors} conveyors; Transit Delay: {_config.ConveyorTransitMilliseconds}; Position Delay: {_config.PositionDelayMilliseconds}.");
             CreateConveyors();
             ConnectConveyors();
         }
@@ -37,6 +37,7 @@ namespace Mqtt.ConveyorSimulator
         private void CreateConveyors()
         {
             _conveyors.Clear();
+
             for (int conveyorId = 1; conveyorId <= _config.NumConveyors; conveyorId++)
             {
                 var conveyor = new Conveyor(conveyorId, _mqttManager, _config);
@@ -46,15 +47,15 @@ namespace Mqtt.ConveyorSimulator
 
         private void ConnectConveyors()
         {
-            for (int junctionId = 0; junctionId < _conveyors.Count - 1; junctionId++)
+            for (int positionId = 0; positionId < _conveyors.Count - 1; positionId++)
             {
-                var junction = _junctions.CreateJunction(_conveyors[junctionId].OutTopic, _conveyors[junctionId + 1].InTopic, _conveyors[junctionId].Id, _conveyors[junctionId+1].Id);
+                var position = _positions.CreatePosition(_conveyors[positionId].OutTopic, _conveyors[positionId + 1].InTopic, _conveyors[positionId].Id, _conveyors[positionId+1].Id);
             }
         }
 
         public async Task StartSimulationAsync()
         {
-            await _junctions.StartSimulationAsync();
+            await _positions.StartSimulationAsync();
             foreach (var conveyor in _conveyors)
             {
                 await conveyor.StartAsync();

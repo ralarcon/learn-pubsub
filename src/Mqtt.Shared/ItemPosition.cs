@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Mqtt.Shared
@@ -14,5 +15,10 @@ namespace Mqtt.Shared
         public DateTime TimeStamp { get; set; }
         public Guid BatchId { get; set; }
         public string Zone { get; set; } = default!;
+    }
+
+    [JsonSerializable(typeof(ItemPosition))]
+    internal partial class ItemPositionJsonContext : JsonSerializerContext
+    {
     }
 }

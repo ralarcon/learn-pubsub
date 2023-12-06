@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Mqtt.Shared
@@ -18,9 +19,13 @@ namespace Mqtt.Shared
     {
         public int Id { get; set; }
         public Guid BatchId { get; set; }
-        public long Count { get; set; }
         public ItemStatusEnum ItemStatus { get; set; }
         public Dictionary<string, DateTime>? Timestamps { get; set; }
 
+    }
+
+    [JsonSerializable(typeof(Item))]
+    internal partial class ItemJsonContext : JsonSerializerContext
+    {
     }
 }

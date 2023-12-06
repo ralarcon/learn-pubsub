@@ -13,5 +13,7 @@ public class MqttConfig
     public string ClientId { get; set; } = default!;
     public string Username { get; set; } = default!;
     public string Password { get; set; } = default!;
+    public bool TrackStatus { get; set; } = true!;
+
 }
 

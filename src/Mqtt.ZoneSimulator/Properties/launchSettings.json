@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "Mqtt.ConveyorSimulator": {
+    "Mqtt.ZoneSimulator": {
       "commandName": "Project"
     },
     "Docker": {

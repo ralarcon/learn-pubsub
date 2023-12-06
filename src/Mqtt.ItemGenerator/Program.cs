@@ -10,8 +10,10 @@ ItemGeneratorConfig config = AppConfigProvider.LoadConfiguration<ItemGeneratorCo
 CancellationTokenSource cancellationTokenSource = new();
 
 //Instantiate mqttManager
-MqttManager mqttManager = await MqttManagerFactory.Create(cancellationTokenSource);
+MqttManager mqttManager = await MqttManagerFactory.CreateDefault(cancellationTokenSource);
 
+//Instantiate bridge (AIO MQTT Broker)
+MqttManager iotmqBridge = await MqttManagerFactory.CreateIotmqBridge(cancellationTokenSource);
 
 //Prepare Gracefull Exit
 AppDomain.CurrentDomain.ProcessExit += async (s, e) =>
@@ -31,7 +33,7 @@ Console.CancelKeyPress += async (sender, eventArgs) =>
 if (config.EnableTermination)
 {
     Console.WriteLine($"[{DateTime.UtcNow}]\tItem Termination Zone: '{config.TerminationZone}'.");
-    ItemTerminator terminator = new(config, mqttManager);
+    ItemTerminator terminator = new(config, mqttManager, iotmqBridge);
     await terminator.StartTerminatingItemsAsync();
 }
 

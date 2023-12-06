@@ -8,12 +8,20 @@ namespace Mqtt.Shared
 {
     public class MqttManagerFactory
     {
-        static async public Task<MqttManager> Create(CancellationTokenSource tokenSource)
+        static async public Task<MqttManager> CreateDefault(CancellationTokenSource tokenSource)
         {
            MqttConfig config = AppConfigProvider.LoadConfiguration<MqttConfig>();
            var mqttManager = new MqttManager(config, tokenSource);
                 await mqttManager.StartMqttClientAsync();
                 return mqttManager;
         }
+
+        static async public Task<MqttManager> CreateIotmqBridge(CancellationTokenSource tokenSource)
+        {
+            MqttConfig config = AppConfigProvider.LoadConfiguration<MqttConfig>("IoTMQ");
+            var mqttManager = new MqttManager(config, tokenSource);
+                await mqttManager.StartMqttClientAsync();
+                return mqttManager;
+        } 
     }
 }

@@ -14,13 +14,15 @@ namespace Mqtt.ItemGenerator
     {
         private readonly ItemGeneratorConfig _config;
         private readonly MqttManager _mqtt;
+        private readonly MqttManager _iotmqBridge;
         private readonly Timer _reportStatusTimer;
         private int _currentCount;
 
-        public ItemTerminator(ItemGeneratorConfig config, MqttManager mqtt)
+        public ItemTerminator(ItemGeneratorConfig config, MqttManager mqtt, MqttManager iotmqBridge)
         {
             _config = config;
             _mqtt = mqtt;
+            _iotmqBridge = iotmqBridge;
             _reportStatusTimer = PrepareReportTimer();
         }
 
@@ -33,18 +35,29 @@ namespace Mqtt.ItemGenerator
             {
                 if (payload.Array != null)
                 {
-                    var item = await payload.Array.DeserializeAsync<Item>();   
+                    var item = payload.Array.DeserializeItem();   
                     if (item != null)
                     {
                         item.Timestamps?.Add($"{_config.TerminationZone}_terminated".ToLower(), DateTime.UtcNow);
                         item.ItemStatus = ItemStatusEnum.Delivered;
-                        await _mqtt.PublishMessageAsync(await item.ToJsonByteArrayAsync(), TopicsDefinition.ItemsTerminated(_config.TerminationZone));
+                        await _mqtt.PublishMessageAsync(item.ToItemBytes(), TopicsDefinition.ItemsTerminated(_config.TerminationZone));
                         _currentCount++;
+
+                        if(_config.EnableBridgeToIoTMQ)
+                        {
+                            await PublishBridgeMessage(item);
+                        }
                     }
                 }
             });
 
             await RemoveItemStatusAsync();
+        }
+
+        private async Task PublishBridgeMessage(Item item)
+        {
+
+            await _iotmqBridge.PublishMessageAsync(item.ToItemBytes(), _config.IoTMqTopic);
         }
 
         private async Task RemoveItemStatusAsync()
@@ -56,7 +69,7 @@ namespace Mqtt.ItemGenerator
                     //Delay a bit to mark the status to avoid colisions
                     await Task.Delay(500);
 
-                    var item = await payload.Array.DeserializeAsync<Item>();
+                    var item = payload.Array.DeserializeItem();
                     if (item != null)
                     {
                         ItemPosition itemPosition = new()
@@ -68,7 +81,7 @@ namespace Mqtt.ItemGenerator
                             Status = item.ItemStatus,
                             TimeStamp = DateTime.UtcNow
                         };
-                        await _mqtt.PublishStatusAsync(await itemPosition.ToJsonByteArrayAsync(), TopicsDefinition.ItemStatus(item.Id));
+                        await _mqtt.PublishStatusAsync(itemPosition.ToItemPositionBytes(), TopicsDefinition.ItemStatus(item.Id));
 
                         await Task.Delay(_config.TerminationRetentionMilliseconds - 500);
 

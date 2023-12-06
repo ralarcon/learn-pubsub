@@ -49,9 +49,9 @@ namespace Mqtt.ItemGenerator
                     Status = item.ItemStatus,
                     TimeStamp = DateTime.UtcNow
                 };
-                await _mqtt.PublishMessageAsync(await item.ToJsonByteArrayAsync(),TopicsDefinition.Items(_config.GenerationZone));
+                await _mqtt.PublishMessageAsync(item.ToItemBytes(),TopicsDefinition.Items(_config.GenerationZone));
 
-                await _mqtt.PublishStatusAsync(await itemPosition.ToJsonByteArrayAsync(), TopicsDefinition.ItemStatus(item.Id));
+                await _mqtt.PublishStatusAsync(itemPosition.ToItemPositionBytes(), TopicsDefinition.ItemStatus(item.Id));
                 await Task.Delay(_config.FrequencyMilliseconds);
             }
             if (_cancellationToken.IsCancellationRequested)

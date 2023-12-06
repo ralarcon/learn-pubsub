@@ -5,16 +5,16 @@ WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["Mqtt.ConveyorSimulator/Mqtt.ConveyorSimulator.csproj", "Mqtt.ConveyorSimulator/"]
-RUN dotnet restore "Mqtt.ConveyorSimulator/Mqtt.ConveyorSimulator.csproj"
+COPY ["Mqtt.ZoneSimulator/Mqtt.ZoneSimulator.csproj", "Mqtt.ZoneSimulator/"]
+RUN dotnet restore "Mqtt.ZoneSimulator/Mqtt.ZoneSimulator.csproj"
 COPY . .
-WORKDIR "/src/Mqtt.ConveyorSimulator"
-RUN dotnet build "Mqtt.ConveyorSimulator.csproj" -c Release -o /app/build
+WORKDIR "/src/Mqtt.ZoneSimulator"
+RUN dotnet build "Mqtt.ZoneSimulator.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Mqtt.ConveyorSimulator.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "Mqtt.ZoneSimulator.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Mqtt.ConveyorSimulator.dll"]
+ENTRYPOINT ["dotnet", "Mqtt.ZoneSimulator.dll"]
