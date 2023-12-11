@@ -46,7 +46,7 @@ public class MqttManager
         _mqttClient.ConnectedAsync += ClientConnectedAsync;
         _mqttClient.DisconnectedAsync += ClientDisconnectedAsync;
         _mqttClient.ConnectingFailedAsync += ConnectingFailedAsync;
-        await _mqttClient.StartAsync(options);
+        await _mqttClient.StartAsync(options).ConfigureAwait(false);
     }
     public async Task StopMqttClientAsync()
     {
@@ -54,7 +54,7 @@ public class MqttManager
         foreach(var topicSubscribed in _topicHandlers.Keys)
         {
             Console.WriteLine($"[{DateTime.UtcNow}]\tUnsubscribing from topic '{topicSubscribed}'");
-            await _mqttClient.UnsubscribeAsync(topicSubscribed);
+            await _mqttClient.UnsubscribeAsync(topicSubscribed).ConfigureAwait(false);
         }
         await _mqttClient.StopAsync();
         Console.WriteLine($"[{DateTime.UtcNow}]\tMQTT client stopped.");
@@ -72,7 +72,7 @@ public class MqttManager
             .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
             .Build();
 
-        await _mqttClient.EnqueueAsync(appMessage);
+        await _mqttClient.EnqueueAsync(appMessage).ConfigureAwait(false);
     }
     public async Task PublishStatusAsync(byte[] payload, string topic)
     {
@@ -81,11 +81,11 @@ public class MqttManager
             var appMessage = new MqttApplicationMessageBuilder()
                 .WithTopic(topic)
                 .WithPayload(payload)
-                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
+                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
                 .WithRetainFlag(true)
                 .Build();
 
-            await _mqttClient.EnqueueAsync(appMessage);
+            _ = _mqttClient.EnqueueAsync(appMessage).ConfigureAwait(false);
         }
     }
 
@@ -98,20 +98,15 @@ public class MqttManager
             .WithRetainFlag(true)
             .Build();
 
-        await _mqttClient.EnqueueAsync(appMessage);
+        _ = _mqttClient.EnqueueAsync(appMessage).ConfigureAwait(false);
     }
-
-    //public async Task PublishMessageWithFormatAsync()
-    //{
-    //    throw new NotImplementedException();
-    //}
 
     public async Task SubscribeTopicAsync(string topic, Func<ArraySegment<byte>, Task> topicHandler)
     {
         if (topicHandler is null) throw new ArgumentNullException(nameof(topicHandler));
         if (string.IsNullOrEmpty(topic)) throw new ArgumentException(topic);
 
-        await _mqttClient.SubscribeAsync(topic);
+        await _mqttClient.SubscribeAsync(topic).ConfigureAwait(false);
 
         _topicHandlers.Add(topic, topicHandler);
 
@@ -119,7 +114,7 @@ public class MqttManager
     }
     public async Task UnsubscribeTopicAsync(string topic)
     {
-        await _mqttClient.UnsubscribeAsync(topic);
+        await _mqttClient.UnsubscribeAsync(topic).ConfigureAwait(false);
     }
 
     public async Task Shutdown(int delayMilliseconds = 500)
@@ -128,8 +123,8 @@ public class MqttManager
         {
             Console.WriteLine($"[{DateTime.UtcNow}]\tMqttManager shutdown requested...");
             _cancellationTokenSource.Cancel();
-            await Task.Delay(delayMilliseconds);
-            await StopMqttClientAsync();
+            await Task.Delay(delayMilliseconds).ConfigureAwait(false);
+            await StopMqttClientAsync().ConfigureAwait(false);
         }
     }
 
@@ -143,7 +138,7 @@ public class MqttManager
             .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
             .WithRetainFlag(true)
             .Build();
-        await _mqttClient.EnqueueAsync(appMessage);
+        await _mqttClient.EnqueueAsync(appMessage).ConfigureAwait(false);
     }
 
 
@@ -166,14 +161,14 @@ public class MqttManager
         {
             if (payload.Array != null && payload.Count > 0)
             {
-                await _topicHandlers[eventArgs.ApplicationMessage.Topic](payload);
+                await _topicHandlers[eventArgs.ApplicationMessage.Topic](payload).ConfigureAwait(false);
             }
             else
             {
-                Console.Error.WriteLine("Payload is empty");
+                Console.Error.WriteLine($"[{DateTime.UtcNow}]\tPayload empty received from topic {eventArgs.ApplicationMessage.Topic}");
             }
         }
 
-        _ = Task.Run(InvokeMessageHandler, _cancellationTokenSource.Token);
+        _ = Task.Run(InvokeMessageHandler, _cancellationTokenSource.Token).ConfigureAwait(false);
     }
 }

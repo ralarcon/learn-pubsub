@@ -9,14 +9,14 @@ write_files:
 runcmd:
   - systemctl restart sshd
   - curl -sfL https://get.k3s.io | sh -
-  - mkdir ~/.kube
-  - cp ~/.kube/config ~/.kube/config.back
-  - sudo KUBECONFIG=~/.kube/config:/etc/rancher/k3s/k3s.yaml kubectl config view --flatten > ~/.kube/merged
-  - mv ~/.kube/merged ~/.kube/config
-  - chmod 0600 ~/.kube/config
-  - echo 'export KUBECONFIG=~/.kube/config' >> ~/.bashrc
-  - export KUBECONFIG=~/.kube/config
-  - kubectl config use-context default
+  - sudo -u ralarcon-azure bash -c 'mkdir ~/.kube'
+  - sudo -u ralarcon-azure bash -c 'cp ~/.kube/config ~/.kube/config.back'
+  - sudo -u ralarcon-azure bash -c 'sudo KUBECONFIG=~/.kube/config:/etc/rancher/k3s/k3s.yaml kubectl config view --flatten > ~/.kube/merged'
+  - sudo -u ralarcon-azure bash -c 'mv ~/.kube/merged ~/.kube/config'
+  - sudo -u ralarcon-azure bash -c 'chmod 0600 ~/.kube/config'
+  - sudo -u ralarcon-azure bash -c 'echo "export KUBECONFIG=~/.kube/config" >> ~/.bashrc'
+  - sudo -u ralarcon-azure bash -c 'export KUBECONFIG=~/.kube/config'
+  - sudo -u ralarcon-azure bash -c 'kubectl config use-context default'
   - sudo apt update
   - sudo apt install -y nfs-common
   - echo 'fs.inotify.max_user_instances=8192' | sudo tee -a /etc/sysctl.conf

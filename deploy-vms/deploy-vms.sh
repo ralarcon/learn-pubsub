@@ -1,3 +1,4 @@
+#!/bin/bash
 # Variables
 resourceGroup="iot-pocs-rg"
 virtualNetwork="iot-pocs-vnet"
@@ -20,7 +21,7 @@ logAnalytics="iot-pocs-logs"
 # # az network vnet create --resource-group $resourceGroup --name $virtualNetwork --address-prefixes 10.1.0.0/16 --subnet-name $subnet --subnet-prefix 10.1.0.0/24
 
 # # Create log analytics
-# az monitor log-analytics workspace create --resource-group $resourceGroup --name $logAnalytics
+az monitor log-analytics workspace create --resource-group $resourceGroup --name $logAnalytics --location $location
 
 # # Crear las máquinas virtuales con todas las especificaciones
 # for i in {1..3}
@@ -72,20 +73,23 @@ logAnalytics="iot-pocs-logs"
 for i in {1..3}
 do
     echo "Configuring extensions for vm iot-pocs-sim-$i"
-    sshPub="$(cat ~/.ssh/$sshKeyName.pub)"
-    az vm extension set --resource-group $resourceGroup --vm-name "iot-pocs-sim-$i" \
-        --publisher Microsoft.OSTCExtensions --version 1.4 \
-        --name VMAccessForLinux \
-        --protected-settings "{\"username\":\"$adminUsername\", \"ssh_key\":\"$sshPub\"}"
+    # sshPub="$(cat ~/.ssh/$sshKeyName.pub)"
+    # az vm extension set --resource-group $resourceGroup --vm-name "iot-pocs-sim-$i" \
+    #     --publisher Microsoft.OSTCExtensions --version 1.4 \
+    #     --name VMAccessForLinux \
+    #     --protected-settings "{\"username\":\"$adminUsername\", \"ssh_key\":\"$sshPub\"}"
     
-    az vm extension set --resource-group $resourceGroup --vm-name "iot-pocs-sim-$i" \
-        --name NetworkWatcherAgentLinux --publisher Microsoft.Azure.NetworkWatcher --version 1.4
+    # az vm extension set --resource-group $resourceGroup --vm-name "iot-pocs-sim-$i" \
+    #     --name NetworkWatcherAgentLinux --publisher Microsoft.Azure.NetworkWatcher --version 1.4
 
-    logsId="$(az monitor log-analytics workspace show --resource-group $resourceGroup --name $logAnalytics --query customerId --output tsv)"
-    logsKey="$(az monitor log-analytics workspace get-shared-keys --resource-group $resourceGroup --name $logAnalytics --query "primarySharedKey" -o tsv)"
+    logsId="$(az monitor log-analytics workspace show --resource-group "$resourceGroup" --name "$logAnalytics" --query customerId --output tsv | tr -cd "[:print:]\n")"
+    logsKey="$(az monitor log-analytics workspace get-shared-keys --resource-group "$resourceGroup" --name "$logAnalytics" --query primarySharedKey -o tsv | tr -cd "[:print:]\n")"
+    
+    echo "WorkspaceId: $logsId"
+    echo "Logs Key: $logsKey"
+
     az vm extension set --resource-group $resourceGroup --vm-name "iot-pocs-sim-$i" \
             --name OmsAgentForLinux --publisher Microsoft.EnterpriseCloud.Monitoring \
-            --version latestVersion \
-            --protected-settings "{\"workspaceKey\":\"$logsKey\"}" \
-            --settings "{\"workspaceId\":\"$logsId\",\"skipDockerProviderInstall\": false}"
+            --version 1.17 \
+            --protected-settings "$(printf '{"workspaceKey":"%s"}' "$logsKey")" --settings "$(printf '{"workspaceId":"%s","skipDockerProviderInstall":false}' "$logsId")"
 done
