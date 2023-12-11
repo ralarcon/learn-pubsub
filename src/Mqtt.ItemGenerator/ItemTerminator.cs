@@ -40,29 +40,18 @@ namespace Mqtt.ItemGenerator
                     {
                         item.Timestamps?.Add($"{_config.TerminationZone}_terminated".ToLower(), DateTime.UtcNow);
                         item.ItemStatus = ItemStatusEnum.Delivered;
-                        await _mqtt.PublishMessageAsync(item.ToItemBytes(), TopicsDefinition.ItemsTerminated(_config.TerminationZone));
+                        await _mqtt.PublishMessageAsync(item.ToItemBytes(), TopicsDefinition.ItemsTerminated());
                         _currentCount++;
-
-                        if(_config.EnableBridgeToIoTMQ)
-                        {
-                            await PublishBridgeMessage(item);
-                        }
                     }
                 }
             });
 
-            await RemoveItemStatusAsync();
+            await TerminateItemsAsync();
         }
 
-        private async Task PublishBridgeMessage(Item item)
+        private async Task TerminateItemsAsync()
         {
-
-            await _iotmqBridge.PublishMessageAsync(item.ToItemBytes(), _config.IoTMqTopic);
-        }
-
-        private async Task RemoveItemStatusAsync()
-        {
-            await _mqtt.SubscribeTopicAsync(TopicsDefinition.ItemsTerminated(_config.TerminationZone), async (payload) =>
+            await _mqtt.SubscribeTopicAsync(TopicsDefinition.ItemsTerminated(), async (payload) =>
             {
                 if (payload.Array != null)
                 {
@@ -72,23 +61,60 @@ namespace Mqtt.ItemGenerator
                     var item = payload.Array.DeserializeItem();
                     if (item != null)
                     {
-                        ItemPosition itemPosition = new()
-                        {
-                            Id = item.Id,
-                            BatchId = item.BatchId,
-                            Zone = _config.TerminationZone,
-                            Position = "Destination",
-                            Status = item.ItemStatus,
-                            TimeStamp = DateTime.UtcNow
-                        };
-                        await _mqtt.PublishStatusAsync(itemPosition.ToItemPositionBytes(), TopicsDefinition.ItemStatus(item.Id));
+                        await CalulateAndPublishLatenciesAsync(item);
 
-                        await Task.Delay(_config.TerminationRetentionMilliseconds - 500);
-
-                        await _mqtt.PublishStatusAsync(new byte[] { }, TopicsDefinition.ItemStatus(item.Id));
+                        await RemoveItemFromStatusAsync(item);
                     }
                 }
             });
+        }
+
+        private async Task RemoveItemFromStatusAsync(Item item)
+        {
+            //Update item position to destination
+            ItemPosition itemPosition = new()
+            {
+                Id = item.Id,
+                BatchId = item.BatchId,
+                Zone = _config.TerminationZone,
+                Position = "Destination",
+                Status = item.ItemStatus,
+                TimeStamp = DateTime.UtcNow
+            };
+            await _mqtt.PublishStatusAsync(itemPosition.ToItemPositionBytes(), TopicsDefinition.ItemStatus(item.Id));
+
+            await Task.Delay(_config.TerminationRetentionMilliseconds - 500);
+
+            //Remove Item from status
+            await _mqtt.PublishStatusAsync(new byte[] { }, TopicsDefinition.ItemStatus(item.Id));
+        }
+
+        private async Task CalulateAndPublishLatenciesAsync(Item item)
+        {
+            //Calculate ItemLatencies and publish to a topic
+            ItemLatencies itemLatencies = new()
+            {
+                Id = item.Id,
+                BatchId = item.BatchId,
+                Timestamps = item.Timestamps,
+                Latencies = new Dictionary<string, TimeSpan>()
+            };
+            if (item.Timestamps?.Count > 1)
+            {
+                for (int i = 1; i < item.Timestamps.Count; i++)
+                {
+                    itemLatencies.Latencies.Add(item.Timestamps.ElementAt(i).Key, item.Timestamps.ElementAt(i).Value - item.Timestamps.ElementAt(i - 1).Value);
+                }
+            }
+
+            if (_config.EnableBridgeToIoTMQ)
+            {
+                await _iotmqBridge.PublishMessageAsync(itemLatencies.ToUtf8Bytes(), _config.IoTMqTopic);
+            }
+            else
+            {
+                await _mqtt.PublishMessageAsync(itemLatencies.ToUtf8Bytes(), TopicsDefinition.ItemsLatencies());
+            }
         }
 
         private Timer PrepareReportTimer()

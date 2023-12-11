@@ -42,14 +42,15 @@ Console.WriteLine($"[{DateTime.UtcNow}]\tSimulation for '{config.Zone}'. Source 
 //TODO: Model beter the converyor + positions "system" to better manager ids, instances & naming
 
 //Prepare Zone Conveyors
-ConveyorSystem conveyors = new ConveyorSystem(config, mqttManager);
+ConveyorSystem conveyors = new ConveyorSystem(config, mqttManager, config.SourceZone, config.DestinationZone);
 
 //Prepare Inter-Zone Positions
-PositionSet intertZonePositions = new(config, mqttManager);
-Position previousZoneConnection = intertZonePositions.CreatePosition(TopicsDefinition.Items(config.SourceZone), TopicsDefinition.ConveyorSensor(config.Zone, conveyors.Conveyors.First().Id, nameof(ConveyorSensor.In)), config.SourceZone, $"{conveyors.Conveyors.First().Id}");
-Position nextZoneConnection = intertZonePositions.CreatePosition(TopicsDefinition.ConveyorSensor(config.Zone, conveyors.Conveyors.Last().Id, nameof(ConveyorSensor.Out)), TopicsDefinition.Items(config.DestinationZone), $"{conveyors.Conveyors.Last().Id}", config.DestinationZone);
-await intertZonePositions.StartSimulationAsync();
+//PositionSet intertZonePositions = new(config, mqttManager);
+//Position previousZoneConnection = intertZonePositions.CreatePosition(TopicsDefinition.Items(config.SourceZone), TopicsDefinition.ConveyorSensor(config.Zone, conveyors.Conveyors.First().Id, nameof(ConveyorSensor.In)), config.SourceZone, $"{conveyors.Conveyors.First().Id}");
+//Position nextZoneConnection = intertZonePositions.CreatePosition(TopicsDefinition.ConveyorSensor(config.Zone, conveyors.Conveyors.Last().Id, nameof(ConveyorSensor.Out)), TopicsDefinition.Items(config.DestinationZone), $"{conveyors.Conveyors.Last().Id}", config.DestinationZone);
+//await intertZonePositions.StartSimulationAsync();
 
+await conveyors.PrepareConveyors();
 await conveyors.StartSimulationAsync();
 
 Console.ReadLine();

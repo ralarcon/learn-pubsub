@@ -8,20 +8,51 @@ namespace Mqtt.Shared
 {
     public class MqttManagerFactory
     {
+        static readonly MqttConfig _defaultBrokerConfig;
+        static readonly MqttConfig _iotmqBrokerConfig;
+        static MqttManager _defaultMqttManager = default!;
+        static MqttManager _iotmqMqttManager = default!;
+        static MqttManagerFactory()
+        {
+            _defaultBrokerConfig = AppConfigProvider.LoadConfiguration<MqttConfig>();
+            _iotmqBrokerConfig = AppConfigProvider.LoadConfiguration<MqttConfig>("IoTMQ");
+        }
+
         static async public Task<MqttManager> CreateDefault(CancellationTokenSource tokenSource)
         {
-           MqttConfig config = AppConfigProvider.LoadConfiguration<MqttConfig>();
-           var mqttManager = new MqttManager(config, tokenSource);
-                await mqttManager.StartMqttClientAsync();
-                return mqttManager;
+            if (_defaultMqttManager != null)
+            {
+                return _defaultMqttManager;
+            }
+            else
+            {
+                _defaultMqttManager = new MqttManager(_defaultBrokerConfig, tokenSource);
+                await _defaultMqttManager.StartMqttClientAsync();
+                return _defaultMqttManager;
+            }
         }
 
         static async public Task<MqttManager> CreateIotmqBridge(CancellationTokenSource tokenSource)
         {
-            MqttConfig config = AppConfigProvider.LoadConfiguration<MqttConfig>("IoTMQ");
-            var mqttManager = new MqttManager(config, tokenSource);
-                await mqttManager.StartMqttClientAsync();
-                return mqttManager;
+            if(_defaultBrokerConfig.MqttServer != _iotmqBrokerConfig.MqttServer)
+            {
+                _iotmqMqttManager = new MqttManager(_iotmqBrokerConfig, tokenSource);
+                await _iotmqMqttManager.StartMqttClientAsync();
+                    return _iotmqMqttManager;
+            }
+            else
+            {
+                if(_defaultMqttManager != null)
+                {
+                    return _defaultMqttManager;
+                }
+                else
+                {
+                    _defaultMqttManager = new MqttManager(_defaultBrokerConfig, tokenSource);
+                    await _defaultMqttManager.StartMqttClientAsync();
+                    return _defaultMqttManager;
+                }
+            }
         } 
     }
 }
