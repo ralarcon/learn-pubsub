@@ -38,7 +38,7 @@ public class MqttManager
                 .WithWillMessageExpiryInterval(60)
                 .WithWillRetain(true)
                 .WithWillPayload(Encoding.UTF8.GetBytes($"Client {_config.ClientId} OFFLINE"))
-                .WithCredentials("", "")
+                .WithCredentials(_config.Username, _config.Password)
                 .Build())
             .Build();
 

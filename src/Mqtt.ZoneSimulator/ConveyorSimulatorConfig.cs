@@ -13,7 +13,7 @@ namespace Mqtt.ZoneSimulator
         public string DestinationZone { get; set; } = default!;
         public int NumConveyors { get; set; }
         public int ConveyorTransitMilliseconds { get; set; } = 5000;
-        public int PositionDelayMilliseconds { get; set; } = 0;
+        public int InterconectionDelayMilliseconds { get; set; } = 0;
         
     }
 }

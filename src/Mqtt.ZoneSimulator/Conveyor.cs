@@ -26,7 +26,7 @@ namespace Mqtt.ZoneSimulator
         private readonly string _id;
         private readonly MqttManager _mqttManager;
         private readonly int _transitDelayMilliseconds;
-        private readonly int _zoneConnectionDelayMilliseconds = 0;
+        private readonly int _interconnectionDelayMilliseconds = 0;
         private readonly string _zone;
         private readonly Timer _reportConveyorStatus;
 
@@ -35,14 +35,14 @@ namespace Mqtt.ZoneSimulator
 
         List<Timer> _cretedTimers = new List<Timer>();
 
-        public Conveyor(int instanceId, MqttManager mqttManager, string zone, int transitDelayMilliseconds, int zoneConnectionDelayMilliseconds = 0)
+        public Conveyor(int instanceId, MqttManager mqttManager, string zone, int transitDelayMilliseconds, int interconnectionDelayMilliseconds)
         {
             
             _mqttManager = mqttManager;
             _zone = zone;
             _id = $"{_zone}_c{instanceId}";
             _transitDelayMilliseconds = transitDelayMilliseconds;
-            _zoneConnectionDelayMilliseconds = zoneConnectionDelayMilliseconds;
+            _interconnectionDelayMilliseconds = interconnectionDelayMilliseconds;
 
             
             _reportConveyorStatus = PrepareReportTimer();
@@ -87,7 +87,7 @@ namespace Mqtt.ZoneSimulator
             {
                 if (payload.Array != null)
                 {
-                    await Task.Delay(_zoneConnectionDelayMilliseconds).ConfigureAwait(false);
+                    await Task.Delay(_interconnectionDelayMilliseconds).ConfigureAwait(false);
 
                     Item item = payload.Array.DeserializeItem();
                     item.Timestamps?.Add($"{_id}_to_{nextConveyor.Id}", DateTime.UtcNow);
@@ -105,7 +105,7 @@ namespace Mqtt.ZoneSimulator
             {
                 if (payload.Array != null)
                 {
-                    await Task.Delay(_zoneConnectionDelayMilliseconds).ConfigureAwait(false);
+                    await Task.Delay(_interconnectionDelayMilliseconds).ConfigureAwait(false);
 
                     Item item = payload.Array.DeserializeItem();
                     item.Timestamps?.Add($"{_id}_to_{destinationZone}", DateTime.UtcNow);
@@ -126,7 +126,7 @@ namespace Mqtt.ZoneSimulator
             {
                 if (payload.Array != null)
                 {
-                    await Task.Delay(_zoneConnectionDelayMilliseconds).ConfigureAwait(false);
+                    await Task.Delay(_interconnectionDelayMilliseconds).ConfigureAwait(false);
 
                     Item item = payload.Array.DeserializeItem();
                     item.Timestamps?.Add($"{sourceZone}_to_{_id}", DateTime.UtcNow);

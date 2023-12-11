@@ -16,8 +16,6 @@ namespace Mqtt.ZoneSimulator
         private readonly string _sourceZone;
         private readonly string _destinationZone;
 
-        private readonly PositionSet _positions;
-
         private List<Conveyor> _conveyors = new();
         
 
@@ -27,22 +25,19 @@ namespace Mqtt.ZoneSimulator
             _mqttManager = mqttManager?? throw new ArgumentNullException(nameof(mqttManager));
             _sourceZone = sourceZone ?? throw new ArgumentNullException(nameof(sourceZone));
             _destinationZone = destinationZone ?? throw new ArgumentNullException(nameof(destinationZone));
-            _positions = new PositionSet(config, mqttManager);
         }
 
         public List<Conveyor> Conveyors => _conveyors;
-        public List<Position> Positions => _positions.Positions;
 
         public async Task PrepareConveyors()
         {
-            Console.WriteLine($"[{DateTime.UtcNow}]\tPreparing {_config.NumConveyors} conveyors; Transit Delay: {_config.ConveyorTransitMilliseconds}; Position Delay: {_config.PositionDelayMilliseconds}.");
+            Console.WriteLine($"[{DateTime.UtcNow}]\tPreparing {_config.NumConveyors} conveyors; Transit Delay: {_config.ConveyorTransitMilliseconds}; Interconnection Delay: {_config.InterconectionDelayMilliseconds}.");
             CreateConveyors();
             await ConnectConveyors();
         }
 
         public async Task StartSimulationAsync()
         {
-            await _positions.StartSimulationAsync();
             foreach (var conveyor in _conveyors)
             {
                 await conveyor.StartAsync();
@@ -57,7 +52,7 @@ namespace Mqtt.ZoneSimulator
             //Create Conveyors
             for (int conveyorId = 1; conveyorId <= _config.NumConveyors; conveyorId++)
             {
-                var conveyor = new Conveyor(conveyorId, _mqttManager, _config.Zone, _config.ConveyorTransitMilliseconds);
+                var conveyor = new Conveyor(conveyorId, _mqttManager, _config.Zone, _config.ConveyorTransitMilliseconds, _config.InterconectionDelayMilliseconds);
                 _conveyors.Add(conveyor);
             }
         }
