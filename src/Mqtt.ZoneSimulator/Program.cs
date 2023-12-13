@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Net.Http.Headers;
 using Mqtt.Shared;
 using Mqtt.ZoneSimulator;
+using System.Security.Cryptography;
 
 ZoneSimulatorConfig config = AppConfigProvider.LoadConfiguration<ZoneSimulatorConfig>();
 
@@ -44,16 +45,14 @@ Console.WriteLine($"[{DateTime.UtcNow}]\tSimulation for '{config.Zone}'. Source 
 //Prepare Zone Conveyors
 ConveyorSystem conveyors = new ConveyorSystem(config, mqttManager, config.SourceZone, config.DestinationZone);
 
-//Prepare Inter-Zone Positions
-//PositionSet intertZonePositions = new(config, mqttManager);
-//Position previousZoneConnection = intertZonePositions.CreatePosition(TopicsDefinition.Items(config.SourceZone), TopicsDefinition.ConveyorSensor(config.Zone, conveyors.Conveyors.First().Id, nameof(ConveyorSensor.In)), config.SourceZone, $"{conveyors.Conveyors.First().Id}");
-//Position nextZoneConnection = intertZonePositions.CreatePosition(TopicsDefinition.ConveyorSensor(config.Zone, conveyors.Conveyors.Last().Id, nameof(ConveyorSensor.Out)), TopicsDefinition.Items(config.DestinationZone), $"{conveyors.Conveyors.Last().Id}", config.DestinationZone);
-//await intertZonePositions.StartSimulationAsync();
-
 await conveyors.PrepareConveyors();
 await conveyors.StartSimulationAsync();
 
-Console.ReadLine();
+Console.WriteLine($"[{DateTime.UtcNow}]\tSimulation started.");
+while (true)
+{
+    await Task.Delay(1000);
+};
 
 
 

@@ -33,7 +33,7 @@ public class MqttManager
                 .WithProtocolVersion(MQTTnet.Formatter.MqttProtocolVersion.V500)
                 .WithClientId(_config.ClientId)
                 .WithTcpServer(_config.MqttServer, _config.MqttPort)
-                .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
+                .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                 .WithWillTopic($"clients/{_config.ClientId}/status")
                 .WithWillMessageExpiryInterval(60)
                 .WithWillRetain(true)
@@ -94,7 +94,7 @@ public class MqttManager
         var appMessage = new MqttApplicationMessageBuilder()
             .WithTopic(topic)
             .WithPayload(new byte[] { })
-            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
+            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
             .WithRetainFlag(true)
             .Build();
 
@@ -135,7 +135,7 @@ public class MqttManager
         var appMessage = new MqttApplicationMessageBuilder()
             .WithTopic($"clients/{_config.ClientId}/status")
             .WithPayload(Encoding.UTF8.GetBytes($"ONLINE"))
-            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
+            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
             .WithRetainFlag(true)
             .Build();
         await _mqttClient.EnqueueAsync(appMessage).ConfigureAwait(false);

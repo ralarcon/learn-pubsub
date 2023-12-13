@@ -58,9 +58,11 @@ namespace Mqtt.ZoneSimulator
         public async Task StartAsync()
         {
             Console.WriteLine($"[{DateTime.UtcNow}]\tStarting Conveyor with Id {_id} waiting for items in the topic '{InTopic}'.");
+            Console.WriteLine($"[{DateTime.UtcNow}]\t>> Conveyor: subscribing to {InTopic} topic and publishing to {OutTopic}.");
+
             await _mqttManager.SubscribeTopicAsync(InTopic, async (payload) =>
             {
-                if (payload == null!)
+                if (payload.Array != null)
                 {
                     var array = payload.Array ?? throw new ArgumentNullException(nameof(payload));
 
@@ -79,11 +81,14 @@ namespace Mqtt.ZoneSimulator
 
         public async Task InterConnect(Conveyor nextConveyor)
         {
-            Console.WriteLine($"[{DateTime.UtcNow}]\tInterconnecting in conveyor {_id} TO {nextConveyor.Id}.");
-            
-            string targetTopic = TopicsDefinition.ConveyorSensor(_zone, nextConveyor.Id, nameof(ConveyorSensor.In));
+            Console.WriteLine($"[{DateTime.UtcNow}]\tInterconnecting in conveyor {_id}[OUT] TO {nextConveyor.Id}[IN].");
 
-            await _mqttManager.SubscribeTopicAsync(TopicsDefinition.ConveyorSensor(_zone, _id, nameof(ConveyorSensor.Out)), async (payload) =>
+            string sourceTopic = TopicsDefinition.ConveyorSensor(_zone, _id, nameof(ConveyorSensor.Out));
+            string targetTopic = TopicsDefinition.ConveyorSensor(_zone, nextConveyor.Id, nameof(ConveyorSensor.In));
+            
+            Console.WriteLine($"[{DateTime.UtcNow}]\t> Interconnection: subscribing to {sourceTopic} topic and publishing to {targetTopic}.");
+
+            await _mqttManager.SubscribeTopicAsync(sourceTopic, async (payload) =>
             {
                 if (payload.Array != null)
                 {
@@ -100,8 +105,13 @@ namespace Mqtt.ZoneSimulator
         public async Task ConnectTransitionToAsync(string destinationZone)
         {
             Console.WriteLine($"[{DateTime.UtcNow}]\tConnecting transition in FROM conveyor {_id} TO {destinationZone}.");
+            
+            string sourceTopic = TopicsDefinition.ConveyorSensor(_zone, _id, nameof(ConveyorSensor.Out));
             string targetTopic = TopicsDefinition.Items(destinationZone);
-            await _mqttManager.SubscribeTopicAsync(TopicsDefinition.ConveyorSensor(_zone, _id, nameof(ConveyorSensor.Out)), async (payload) =>
+
+            Console.WriteLine($"[{DateTime.UtcNow}]\t# Transition: subscribing to {sourceTopic} topic and publishing to {targetTopic}.");
+
+            await _mqttManager.SubscribeTopicAsync(sourceTopic, async (payload) =>
             {
                 if (payload.Array != null)
                 {
@@ -120,9 +130,13 @@ namespace Mqtt.ZoneSimulator
         public async Task ConnectTransitionFromAsync(string sourceZone)
         {
             Console.WriteLine($"[{DateTime.UtcNow}]\tConnecting transition in FROM {sourceZone} TO conveyor {_id}.");
+            
+            string sourceTopic = TopicsDefinition.Items(sourceZone);
             string targetTopic = TopicsDefinition.ConveyorSensor(_zone, _id, nameof(ConveyorSensor.In));
 
-            await _mqttManager.SubscribeTopicAsync(TopicsDefinition.Items(sourceZone), async (payload) =>
+            Console.WriteLine($"[{DateTime.UtcNow}]\t# Transition: subscribing to {sourceTopic} topic and publishing to {targetTopic}.");
+
+            await _mqttManager.SubscribeTopicAsync(sourceTopic, async (payload) =>
             {
                 if (payload.Array != null)
                 {

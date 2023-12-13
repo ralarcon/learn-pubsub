@@ -19,9 +19,9 @@ services:
             context: .
             dockerfile: Mqtt.ItemGenerator/Dockerfile
 
-    # mqtt.conveyorSimulator:
-    #     image: ${DOCKER_REGISTRY-}mqttzonesimulator
-    #     container_name: zone-simulator
-    #     build:
-    #         context: .
-    #         dockerfile: Mqtt.ZoneSimulator/Dockerfile
+    mqtt.conveyorSimulator:
+        image: ${DOCKER_REGISTRY-}mqttzonesimulator
+        container_name: zone-simulator
+        build:
+            context: .
+            dockerfile: Mqtt.ZoneSimulator/Dockerfile

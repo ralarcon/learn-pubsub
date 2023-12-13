@@ -24,3 +24,4 @@ runcmd:
   - sudo sysctl -p
   - echo 'fs.file-max=100000' | sudo tee -a /etc/sysctl.conf
   - sudo sysctl -p
+  - sudo -u ralarcon-azure bash -c 'curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash'

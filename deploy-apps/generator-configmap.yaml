@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: items-generator-config
+  namespace: default
+data:
+  ItemGeneratorConfig__GenerationZone: "src"
+  ItemGeneratorConfig__TerminationZone: "end"
+  ItemGeneratorConfig__EnableGeneration: "true"
+  ItemGeneratorConfig__EnableTermination: "true"
+  ItemGeneratorConfig__EnableBridgeToIoTMQ: "true"
+  ItemGeneratorConfig__FrequencyMilliseconds: "1000"
+  ItemGeneratorConfig__MaxItems: "0"
+  ItemGeneratorConfig__SimulationStartDelayMilliseconds: "5000"
+  ItemGeneratorConfig__TerminationRetentionMilliseconds: "30000"
+  ItemGeneratorConfig__IoTMqTopic: "simulator/items/processed"
+  MqttConfig__MqttServer: "iot-pocs-sim-1"
+  MqttConfig__MqttPort: "1883"
+  MqttConfig__TrackStatus: "true"
+  MqttConfig__QoS: "1"
+  MqttConfig__ClientId: "Mqtt.ItemsGenerator"
+  MqttConfig__Username: "client1"
+  IoTMQ__MqttServer: "iot-pocs-vm1"
+  IoTMQ__MqttPort: "1883"
+  IoTMQ__QoS: "1"
+  IoTMQ__ClientId: "Mqtt.ItemGenerator"
+  IoTMQ__Username: "client1"

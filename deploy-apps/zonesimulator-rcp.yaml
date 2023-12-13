@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: zone-simulator-rcp
+  namespace: default
+spec:
+  containers:
+  - name: zone-simulator-rcp
+    image: ragcdevacr.azurecr.io/sim/zonesimulator:latest
+    envFrom:
+    - configMapRef:
+        name: zone-simulator-rcp-config
+    - secretRef:
+        name: simulation-secrets               
+  restartPolicy: OnFailure
+  imagePullSecrets:
+  - name: ragcdevacr-pull-secret
