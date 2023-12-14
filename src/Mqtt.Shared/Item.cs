@@ -19,6 +19,8 @@ namespace Mqtt.Shared
     {
         public int Id { get; set; }
         public Guid BatchId { get; set; }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public ItemStatusEnum ItemStatus { get; set; }
         public Dictionary<string, DateTime>? Timestamps { get; set; }
 

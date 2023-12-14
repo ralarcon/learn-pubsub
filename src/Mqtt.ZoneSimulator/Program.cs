@@ -36,14 +36,14 @@ Console.CancelKeyPress += async (sender, eventArgs) =>
 
 
 
-Console.WriteLine($"[{DateTime.UtcNow}]\tSimulation for '{config.Zone}'. Source Zone: '{TopicsDefinition.Items(config.SourceZone)}'; Destination Zone: '{config.DestinationZone}'.");
+Console.WriteLine($"[{DateTime.UtcNow}]\tSimulation for '{config.Zone}'. Source Zone: '{TopicsDefinition.Items(config.ItemsSource)}'; Destination Zone: '{config.ItemsDestination}'.");
 
 
 
 //TODO: Model beter the converyor + positions "system" to better manager ids, instances & naming
 
 //Prepare Zone Conveyors
-ConveyorSystem conveyors = new ConveyorSystem(config, mqttManager, config.SourceZone, config.DestinationZone);
+ConveyorSystem conveyors = new ConveyorSystem(config, mqttManager, config.ItemsSource, config.ItemsDestination);
 
 await conveyors.PrepareConveyors();
 await conveyors.StartSimulationAsync();

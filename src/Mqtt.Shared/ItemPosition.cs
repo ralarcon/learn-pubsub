@@ -10,6 +10,8 @@ namespace Mqtt.Shared
     public class ItemPosition
     {
         public int Id { get; set; }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public ItemStatusEnum Status { get; set; }
         public string Position { get; set; } = default!;
         public DateTime TimeStamp { get; set; }

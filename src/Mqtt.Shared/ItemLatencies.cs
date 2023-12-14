@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Mqtt.ItemGenerator;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,7 @@ namespace Mqtt.Shared
     {
         public int Id { get; set; }
         public Guid BatchId { get; set; }
-        public Dictionary<string, TimeSpan>? Latencies { get; set; }
+        public List<ItemTransitionLatency>? Latencies { get; set; }
         public Dictionary<string, DateTime>? Timestamps { get; set; }
     }
 }

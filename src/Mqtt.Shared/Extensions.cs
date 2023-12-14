@@ -12,11 +12,6 @@ namespace Mqtt.Shared
 {
     public static class Extensions
     {
-        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.General)
-        {
-            Converters = { new JsonStringEnumConverter() },
-        };
-
         public static byte[] ToUtf8Bytes(this object obj)
         {
             if (obj == null) return new byte[] { };

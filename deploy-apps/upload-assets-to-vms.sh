@@ -8,8 +8,9 @@ for vmIp in $vmIps
 do
     vmIp=$(echo $vmIp | tr -cd '[:print:]')
     echo $vmIp
-    
+
     echo 'ssh -i ~/.ssh/ralarcon_azure_rsa -p 12123 ralarcon-azure@'$vmIp' mkdir -p ~/deploy-apps/'
+    ssh -i ~/.ssh/ralarcon_azure_rsa -p 12123 ralarcon-azure@$vmIp 'rm ~/deploy-apps/*.yaml ~/deploy-apps/*.sh'
     ssh -i ~/.ssh/ralarcon_azure_rsa -p 12123 ralarcon-azure@$vmIp 'mkdir -p ~/deploy-apps/'
     
     echo 'scp -i ~/.ssh/ralarcon_azure_rsa -P 12123 -r ./*.* ralarcon-azure@'$vmIp':~/deploy-apps/'

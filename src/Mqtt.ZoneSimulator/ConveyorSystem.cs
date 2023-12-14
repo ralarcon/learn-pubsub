@@ -13,18 +13,18 @@ namespace Mqtt.ZoneSimulator
     {
         private readonly ZoneSimulatorConfig _config;
         private readonly MqttManager _mqttManager;
-        private readonly string _sourceZone;
-        private readonly string _destinationZone;
+        private readonly string _itemsSource;
+        private readonly string _itemsDestination;
 
         private List<Conveyor> _conveyors = new();
         
 
-        public ConveyorSystem(ZoneSimulatorConfig config, MqttManager mqttManager, string sourceZone, string destinationZone)
+        public ConveyorSystem(ZoneSimulatorConfig config, MqttManager mqttManager, string itemsSource, string itemsDestination)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _mqttManager = mqttManager?? throw new ArgumentNullException(nameof(mqttManager));
-            _sourceZone = sourceZone ?? throw new ArgumentNullException(nameof(sourceZone));
-            _destinationZone = destinationZone ?? throw new ArgumentNullException(nameof(destinationZone));
+            _itemsSource = itemsSource ?? throw new ArgumentNullException(nameof(itemsSource));
+            _itemsDestination = itemsDestination ?? throw new ArgumentNullException(nameof(itemsDestination));
         }
 
         public List<Conveyor> Conveyors => _conveyors;
@@ -61,7 +61,7 @@ namespace Mqtt.ZoneSimulator
         {
             //Connect First Conveyor to source zone
             int firstConveyorIndex = 0;
-            await _conveyors[firstConveyorIndex].ConnectTransitionFromAsync(_sourceZone);
+            await _conveyors[firstConveyorIndex].ConnectTransitionFromAsync(_itemsSource);
 
             //Chain conveyors
             for (int i = 0; i < _conveyors.Count-1; i++)
@@ -71,7 +71,7 @@ namespace Mqtt.ZoneSimulator
 
             //Connect last conveyor to destination zone
             int lastConveyorIndex = _conveyors.Count - 1;
-            await _conveyors[lastConveyorIndex].ConnectTransitionToAsync(_destinationZone);
+            await _conveyors[lastConveyorIndex].ConnectTransitionToAsync(_itemsDestination);
         }
 
 

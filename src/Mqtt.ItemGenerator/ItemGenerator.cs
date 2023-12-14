@@ -28,6 +28,9 @@ namespace Mqtt.ItemGenerator
         {
             Console.WriteLine($"[{DateTime.UtcNow}]\tItems generating started. Frequency: {_config.FrequencyMilliseconds} ms; MaxItems: {_config.MaxItems}.");
             _currentCount = 0;
+
+            await _mqtt.PublishMessageAsync((new Item()).ToItemBytes(), TopicsDefinition.Items(_config.ItemsGeneration));
+
             while ((_config.MaxItems == 0 || _currentCount < _config.MaxItems) && !_cancellationToken.IsCancellationRequested)
             {
                 _currentCount++;
@@ -37,21 +40,22 @@ namespace Mqtt.ItemGenerator
                     BatchId = Guid.NewGuid(),
                     Timestamps = new Dictionary<string, DateTime>()
                     {
-                        { $"{_config.GenerationZone}_created", DateTime.UtcNow }
+                        { $"{_config.ItemsGeneration}_created", DateTime.UtcNow }
                     },
                 };
                 ItemPosition itemPosition = new()
                 {
                     Id = item.Id,
                     BatchId = item.BatchId,
-                    Zone = _config.GenerationZone,
+                    Zone = _config.ItemsGeneration,
                     Position = "Origin",
                     Status = item.ItemStatus,
                     TimeStamp = DateTime.UtcNow
                 };
-                await _mqtt.PublishMessageAsync(item.ToItemBytes(),TopicsDefinition.Items(_config.GenerationZone));
+                await _mqtt.PublishMessageAsync(item.ToItemBytes(),TopicsDefinition.Items(_config.ItemsGeneration));
 
                 await _mqtt.PublishStatusAsync(itemPosition.ToItemPositionBytes(), TopicsDefinition.ItemStatus(item.Id));
+
                 await Task.Delay(_config.FrequencyMilliseconds);
             }
             if (_cancellationToken.IsCancellationRequested)

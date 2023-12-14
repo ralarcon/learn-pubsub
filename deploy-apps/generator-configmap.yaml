@@ -4,8 +4,8 @@ metadata:
   name: items-generator-config
   namespace: default
 data:
-  ItemGeneratorConfig__GenerationZone: "src"
-  ItemGeneratorConfig__TerminationZone: "end"
+  ItemGeneratorConfig__ItemsGeneration: "src"
+  ItemGeneratorConfig__ItemsTermination: "end"
   ItemGeneratorConfig__EnableGeneration: "true"
   ItemGeneratorConfig__EnableTermination: "true"
   ItemGeneratorConfig__EnableBridgeToIoTMQ: "true"

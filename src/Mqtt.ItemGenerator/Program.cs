@@ -32,7 +32,7 @@ Console.CancelKeyPress += async (sender, eventArgs) =>
 
 if (config.EnableTermination)
 {
-    Console.WriteLine($"[{DateTime.UtcNow}]\tItem Termination Zone: '{config.TerminationZone}'.");
+    Console.WriteLine($"[{DateTime.UtcNow}]\tItem Termination Zone: '{config.ItemsTermination}'.");
     ItemTerminator terminator = new(config, mqttManager, iotmqBridge);
     await terminator.StartTerminatingItemsAsync();
 }

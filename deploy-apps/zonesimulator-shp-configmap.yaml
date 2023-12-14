@@ -5,8 +5,8 @@ metadata:
   namespace: default
 data:
   ZoneSimulatorConfig__Zone: "shp"
-  ZoneSimulatorConfig__SourceZone: "int"
-  ZoneSimulatorConfig__DestinationZone: "end"
+  ZoneSimulatorConfig__ItemsSource: "shp"
+  ZoneSimulatorConfig__ItemsDestination: "end"
   ZoneSimulatorConfig__NumConveyors: "3"
   ZoneSimulatorConfig__ConveyorTransitMilliseconds: "5000"
   ZoneSimulatorConfig__InterConnectionDelayMilliseconds: "0"

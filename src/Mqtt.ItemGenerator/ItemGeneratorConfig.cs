@@ -10,8 +10,8 @@ namespace Mqtt.ItemGenerator
     {
         public int FrequencyMilliseconds { get; set; } = 1000; //Default 1 generation per second
         public int MaxItems { get; set; } = 0; //Zero or negative == infinite
-        public string GenerationZone { get; set; } = default!;
-        public string TerminationZone { get; set; } = default!;
+        public string ItemsGeneration { get; set; } = default!;
+        public string ItemsTermination { get; set; } = default!;
         public int TerminationRetentionMilliseconds { get; set; } = default!;
         public int SimulationStartDelayMilliseconds { get; set; } = 5000;
         public bool EnableTermination { get; set; } = true;
