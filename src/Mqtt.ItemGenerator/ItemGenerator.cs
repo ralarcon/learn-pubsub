@@ -20,7 +20,7 @@ namespace Mqtt.ItemGenerator
             _config = config;
             _mqtt = mqtt;
             _cancellationToken = cancellationToken;
-            _reportStatusTimer = PrepareReportTimer();
+            _reportStatusTimer = AliveReportTimer();
         }
 
 
@@ -68,7 +68,7 @@ namespace Mqtt.ItemGenerator
             }
         }
 
-        private Timer PrepareReportTimer()
+        private Timer AliveReportTimer()
         {
             return new Timer((state) =>
             {

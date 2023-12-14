@@ -12,6 +12,7 @@ using System.Net.Http.Headers;
 using Mqtt.Shared;
 using Mqtt.ZoneSimulator;
 using System.Security.Cryptography;
+using System.Diagnostics;
 
 ZoneSimulatorConfig config = AppConfigProvider.LoadConfiguration<ZoneSimulatorConfig>();
 
@@ -39,18 +40,26 @@ Console.CancelKeyPress += async (sender, eventArgs) =>
 Console.WriteLine($"[{DateTime.UtcNow}]\tSimulation for '{config.Zone}'. Source Zone: '{TopicsDefinition.Items(config.ItemsSource)}'; Destination Zone: '{config.ItemsDestination}'.");
 
 
-
 //TODO: Model beter the converyor + positions "system" to better manager ids, instances & naming
 
 //Prepare Zone Conveyors
-ConveyorSystem conveyors = new ConveyorSystem(config, mqttManager, config.ItemsSource, config.ItemsDestination);
+ConveyorSystem zoneConveyors = new ConveyorSystem(config, mqttManager, config.ItemsSource, config.ItemsDestination);
 
-await conveyors.PrepareConveyors();
-await conveyors.StartSimulationAsync();
+await zoneConveyors.PrepareConveyors();
+await zoneConveyors.StartSimulationAsync();
 
-Console.WriteLine($"[{DateTime.UtcNow}]\tSimulation started.");
+Console.WriteLine($"[{DateTime.UtcNow}]\tSimulation running... ");
+Stopwatch reportAliveWatch = Stopwatch.StartNew();
 while (true)
 {
+    if(reportAliveWatch.ElapsedMilliseconds > 30000)
+    {
+        reportAliveWatch.Restart();
+        Console.WriteLine();
+        Console.WriteLine($"[{DateTime.UtcNow}]\tSimulation alive... ");
+        Console.WriteLine($"[{DateTime.UtcNow}]\tItems transited in conveyor {zoneConveyors.Conveyors.LastOrDefault()?.Id}: {zoneConveyors.Conveyors.LastOrDefault()?.ItemsOut}");
+        Console.WriteLine($"[{DateTime.UtcNow}]\tMqtt Status -> Connected: {mqttManager.IsConnected}; Started: {mqttManager.IsStarted}; Pending Messages: {mqttManager.PendingAppMessages}");
+    }
     await Task.Delay(1000);
 };
 

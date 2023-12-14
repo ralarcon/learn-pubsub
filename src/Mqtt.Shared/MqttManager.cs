@@ -25,6 +25,10 @@ public class MqttManager
         _cancellationTokenSource = cancellationTokenSource;
     }
 
+    public bool IsConnected => _mqttClient.IsConnected;
+    public bool IsStarted => _mqttClient.IsStarted;
+    public int PendingAppMessages => _mqttClient.PendingApplicationMessagesCount;
+
     public async Task StartMqttClientAsync()
     {
         var options = new ManagedMqttClientOptionsBuilder()
@@ -46,8 +50,11 @@ public class MqttManager
         _mqttClient.ConnectedAsync += ClientConnectedAsync;
         _mqttClient.DisconnectedAsync += ClientDisconnectedAsync;
         _mqttClient.ConnectingFailedAsync += ConnectingFailedAsync;
+        _mqttClient.SynchronizingSubscriptionsFailedAsync += _mqttClient_SynchronizingSubscriptionsFailedAsync;
+        _mqttClient.ApplicationMessageSkippedAsync += _mqttClient_ApplicationMessageSkippedAsync;
         await _mqttClient.StartAsync(options).ConfigureAwait(false);
     }
+
     public async Task StopMqttClientAsync()
     {
         Console.WriteLine($"[{DateTime.UtcNow}]\tClient {_config.ClientId} stopping.");
@@ -171,4 +178,33 @@ public class MqttManager
 
         _ = Task.Run(InvokeMessageHandler, _cancellationTokenSource.Token).ConfigureAwait(false);
     }
+
+    private Task _mqttClient_SynchronizingSubscriptionsFailedAsync(ManagedProcessFailedEventArgs arg)
+    {
+        Console.WriteLine($"[{DateTime.UtcNow}]\tClient {_config.ClientId} FAILED to synchronize subscriptions. Exception:\n{arg.Exception}");
+        Console.WriteLine($"[{DateTime.UtcNow}]\tClient {_config.ClientId} retrying to synchronize subscriptions...");
+
+        arg.RemovedSubscriptions.ForEach(async topic =>
+        {
+            Console.WriteLine($"[{DateTime.UtcNow}]\tClient {_config.ClientId} unsubscribing from topic '{topic}'");
+            await _mqttClient.UnsubscribeAsync(topic).ConfigureAwait(false);
+        });
+
+        arg.AddedSubscriptions.ForEach(async topic =>
+        {
+            Console.WriteLine($"[{DateTime.UtcNow}]\tClient {_config.ClientId} subscribing to topic '{topic}'");
+            await _mqttClient.SubscribeAsync(topic).ConfigureAwait(false);
+        });
+
+        return Task.CompletedTask;
+    }
+
+    private async Task _mqttClient_ApplicationMessageSkippedAsync(ApplicationMessageSkippedEventArgs arg)
+    {
+        if (arg.ApplicationMessage.ApplicationMessage.PayloadSegment.Array != null)
+        {
+            await PublishStatusAsync(arg.ApplicationMessage.ApplicationMessage.PayloadSegment.Array, $"clients/{_config.ClientId}/skipped/{arg.ApplicationMessage.ApplicationMessage.Topic}");
+        }
+    }
+
 }
