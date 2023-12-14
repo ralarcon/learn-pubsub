@@ -89,7 +89,7 @@ namespace Mqtt.ItemGenerator
             await Task.Delay(_config.TerminationRetentionMilliseconds - 500);
 
             //Remove Item from status
-            await _mqtt.PublishStatusAsync(new byte[] { }, TopicsDefinition.ItemStatus(item.Id));
+            await _mqtt.RemoveStatusAsync(TopicsDefinition.ItemStatus(item.Id));
         }
 
         private async Task CalulateAndPublishLatenciesAsync(Item item)
@@ -149,13 +149,6 @@ namespace Mqtt.ItemGenerator
                         }
                     }
 
-                    if(transitionType == ItemTransitionTypeEnum.Unknown)
-                    {
-                        source = item.Timestamps.ElementAt(i).Key;
-                        target = item.Timestamps.ElementAt(i).Key;
-                    }
-
-
                     itemLatencies.Add(new ItemTransitionLatency()
                     {
                         Id = item.Id,
@@ -163,11 +156,11 @@ namespace Mqtt.ItemGenerator
                         TransitionType = transitionType,
                         SourceZone = GetZone(source),
                         TargetZone = GetZone(target),
-                        Source = source,
-                        Target = target,
+                        TimestampSourceName = item.Timestamps.ElementAt(i - 1).Key,
+                        TimestampTargetName = item.Timestamps.ElementAt(i).Key,
                         TimestampSource = item.Timestamps.ElementAt(i - 1).Value,
                         TimestampTarget = item.Timestamps.ElementAt(i).Value,
-                        Latency = item.Timestamps.ElementAt(i).Value - item.Timestamps.ElementAt(i - 1).Value
+                        LatencyMilliseconds = (item.Timestamps.ElementAt(i).Value - item.Timestamps.ElementAt(i - 1).Value).TotalMilliseconds
                     });
                 }
             }
@@ -177,12 +170,25 @@ namespace Mqtt.ItemGenerator
             {
                 if (_config.EnableBridgeToIoTMQ)
                 {
-                    await _iotmqBridge.PublishMessageAsync(itemLatency.ToUtf8Bytes(), _config.IoTMqTopic);
+                    await _iotmqBridge.PublishMessageAsync(itemLatency.ToUtf8Bytes(), TopicsDefinition.ItemsLatencies());
                 }
                 else
                 {
                     await _mqtt.PublishMessageAsync(itemLatency.ToUtf8Bytes(), TopicsDefinition.ItemsLatencies());
                 }
+            }
+
+            if(_config.EnableBridgeToIoTMQ)
+            {
+                //Publish item to IoTMQ
+                var itemWithRawTs = new
+                {
+                    item.Id,
+                    item.BatchId,
+                    RawTimestamps = String.Join("; ", item.Timestamps.Select(x => $"{x.Key} = {x.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ")}").ToArray()),
+                    item.ItemStatus
+                };
+                await _iotmqBridge.PublishMessageAsync(itemWithRawTs.ToUtf8Bytes(), TopicsDefinition.ItemsProcessed());
             }
         }
 

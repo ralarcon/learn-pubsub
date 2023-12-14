@@ -30,14 +30,14 @@ namespace Mqtt.ItemGenerator
             _currentCount = 0;
 
             await _mqtt.PublishMessageAsync((new Item()).ToItemBytes(), TopicsDefinition.Items(_config.ItemsGeneration));
-
+            Guid batchId = Guid.NewGuid();
             while ((_config.MaxItems == 0 || _currentCount < _config.MaxItems) && !_cancellationToken.IsCancellationRequested)
             {
                 _currentCount++;
                 Item item = new()
                 {
                     Id = _currentCount,
-                    BatchId = Guid.NewGuid(),
+                    BatchId = batchId,
                     Timestamps = new Dictionary<string, DateTime>()
                     {
                         { $"{_config.ItemsGeneration}_created", DateTime.UtcNow }

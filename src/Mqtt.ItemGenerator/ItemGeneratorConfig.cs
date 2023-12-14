@@ -17,6 +17,5 @@ namespace Mqtt.ItemGenerator
         public bool EnableTermination { get; set; } = true;
         public bool EnableGeneration { get; set; } = true;
         public bool EnableBridgeToIoTMQ { get; set; } = false;
-        public string IoTMqTopic { get; set; } = default!;
     }
 }

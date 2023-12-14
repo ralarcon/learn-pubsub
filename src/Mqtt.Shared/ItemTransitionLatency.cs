@@ -18,15 +18,15 @@ namespace Mqtt.ItemGenerator
         {
         }
 
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public ItemTransitionTypeEnum TransitionType { get; set; }
-        public string Source { get; set; }
-        public string Target { get; set; }
-        public TimeSpan Latency { get; set; }
-        public string SourceZone { get; set; }
-        public string TargetZone { get; set; }
         public int Id { get; set; }
         public Guid BatchId { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public ItemTransitionTypeEnum TransitionType { get; set; }
+        public double LatencyMilliseconds { get; set; }
+        public string SourceZone { get; set; }
+        public string TargetZone { get; set; }
+        public string TimestampSourceName { get; set; }
+        public string TimestampTargetName { get; set; }
         public DateTime TimestampSource { get; set; }
         public DateTime TimestampTarget { get; set; }
     }

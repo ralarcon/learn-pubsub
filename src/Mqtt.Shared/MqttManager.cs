@@ -1,4 +1,5 @@
-﻿using MQTTnet;
+﻿using Mqtt.Shared;
+using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Protocol;
@@ -37,7 +38,7 @@ public class MqttManager
                 .WithProtocolVersion(MQTTnet.Formatter.MqttProtocolVersion.V500)
                 .WithClientId(_config.ClientId)
                 .WithTcpServer(_config.MqttServer, _config.MqttPort)
-                .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+                .WithWillQualityOfServiceLevel((MqttQualityOfServiceLevel)_config.QoS)
                 .WithWillTopic($"clients/{_config.ClientId}/status")
                 .WithWillMessageExpiryInterval(60)
                 .WithWillRetain(true)
@@ -76,7 +77,7 @@ public class MqttManager
         var appMessage = new MqttApplicationMessageBuilder()
             .WithTopic(topic)
             .WithPayload(payload)
-            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+            .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)_config.QoS)
             .Build();
 
         await _mqttClient.EnqueueAsync(appMessage).ConfigureAwait(false);
@@ -88,7 +89,7 @@ public class MqttManager
             var appMessage = new MqttApplicationMessageBuilder()
                 .WithTopic(topic)
                 .WithPayload(payload)
-                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)_config.QoS)
                 .WithRetainFlag(true)
                 .Build();
 
@@ -105,7 +106,7 @@ public class MqttManager
             .WithRetainFlag(true)
             .Build();
 
-        _ = _mqttClient.EnqueueAsync(appMessage).ConfigureAwait(false);
+        await _mqttClient.EnqueueAsync(appMessage).ConfigureAwait(false);
     }
 
     public async Task SubscribeTopicAsync(string topic, Func<ArraySegment<byte>, Task> topicHandler)
@@ -113,7 +114,7 @@ public class MqttManager
         if (topicHandler is null) throw new ArgumentNullException(nameof(topicHandler));
         if (string.IsNullOrEmpty(topic)) throw new ArgumentException(topic);
 
-        await _mqttClient.SubscribeAsync(topic).ConfigureAwait(false);
+        await _mqttClient.SubscribeAsync(topic, (MqttQualityOfServiceLevel)_config.QoS).ConfigureAwait(false);
 
         _topicHandlers.Add(topic, topicHandler);
 
