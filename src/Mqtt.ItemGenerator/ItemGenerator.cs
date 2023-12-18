@@ -29,8 +29,9 @@ namespace Mqtt.ItemGenerator
             Console.WriteLine($"[{DateTime.UtcNow}]\tItems generating started. Frequency: {_config.FrequencyMilliseconds} ms; MaxItems: {_config.MaxItems}.");
             _currentCount = 0;
 
-            await _mqtt.PublishMessageAsync((new Item()).ToItemBytes(), TopicsDefinition.Items(_config.ItemsGeneration));
+
             Guid batchId = Guid.NewGuid();
+
             while ((_config.MaxItems == 0 || _currentCount < _config.MaxItems) && !_cancellationToken.IsCancellationRequested)
             {
                 _currentCount++;
@@ -41,7 +42,7 @@ namespace Mqtt.ItemGenerator
                     Timestamps = new Dictionary<string, DateTime>()
                     {
                         { $"{_config.ItemsGeneration}_created", DateTime.UtcNow }
-                    },
+                    }
                 };
                 ItemPosition itemPosition = new()
                 {
