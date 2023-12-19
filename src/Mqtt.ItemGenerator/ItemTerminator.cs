@@ -1,6 +1,7 @@
 ﻿using Mqtt.Shared;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -36,12 +37,13 @@ namespace Mqtt.ItemGenerator
             
             await _mqtt.SubscribeTopicAsync(TopicsDefinition.Items(_config.ItemsTermination), async (payload) =>
             {
+                var timestamp = DateTime.UtcNow;
                 if (payload.Array != null)
                 {
                     var item = payload.Array.DeserializeItem();   
                     if (item != null)
                     {
-                        item.Timestamps?.Add($"{_config.ItemsTermination}_terminated".ToLower(), DateTime.UtcNow);
+                        item.Timestamps?.Add($"{_config.ItemsTermination}_terminated".ToLower(), timestamp);
                         item.ItemStatus = ItemStatusEnum.Delivered;
                         await _mqtt.PublishMessageAsync(item.ToItemBytes(), TopicsDefinition.ItemsTerminated());
                         _currentCount++;
@@ -100,72 +102,130 @@ namespace Mqtt.ItemGenerator
             {
                 for (int i = 1; i < item.Timestamps.Count; i++)
                 {
-                    //itemLatencies.Latencies.Add(item.Timestamps.ElementAt(i).Key, item.Timestamps.ElementAt(i).Value - item.Timestamps.ElementAt(i - 1).Value);
+                    var sourceTimestamp = item.Timestamps.ElementAt(i - 1).Key;
+                    var targetTimestamp = item.Timestamps.ElementAt(i).Key;
 
-                    var source = string.Empty;
-                    var target = string.Empty;
-                    var transitionType = ItemTransitionTypeEnum.Unknown;
-
-                    if (item.Timestamps.ElementAt(i).Key.Contains("_to_"))
-                    {
-                        source = item.Timestamps.ElementAt(i).Key.Split("_to_")[0];
-                        target = item.Timestamps.ElementAt(i).Key.Split("_to_")[1];
-
-                        //Zone Transition
-                        if (!IsConveyor(source) && IsConveyor(target))
-                        {
-                            transitionType = ItemTransitionTypeEnum.ZoneEnter;
-                        }
-                        else if (IsConveyor(source) && IsConveyor(target) && target.StartsWith(GetZone(source)))
-                        {
-                            transitionType = ItemTransitionTypeEnum.ConveyorChain;
-                        }
-                        else if (IsConveyor(source) && !IsConveyor(target))
-                        {
-                            transitionType = ItemTransitionTypeEnum.ZoneExit;
-                        }
-                    }
-                    else
-                    {
-                        if (item.Timestamps.ElementAt(i).Key.EndsWith("_in"))
-                        {
-                            target = item.Timestamps.ElementAt(i).Key.Split("_in")[0];
-                            source = GetZone(target);
-                            transitionType = ItemTransitionTypeEnum.ConveyorEnter;
-                        }
-
-                        if (item.Timestamps.ElementAt(i).Key.EndsWith("_out"))
-                        {
-                            target = item.Timestamps.ElementAt(i).Key.Split("_out")[0];
-                            source = GetZone(target);
-                            transitionType = ItemTransitionTypeEnum.ConveyorTransport;
-                        }
-
-                        if(item.Timestamps.ElementAt(i).Key.EndsWith("_terminated"))
-                        {
-                            target = item.Timestamps.ElementAt(i).Key.Split("_terminated")[0];
-                            source = GetZone(target);
-                            transitionType = ItemTransitionTypeEnum.Termination;
-                        }
-                    }
+                    ItemTransitionTypeEnum transitionType = GetTransitionType(sourceTimestamp, targetTimestamp);
 
                     itemLatencies.Add(new ItemTransitionLatency()
                     {
                         Id = item.Id,
                         BatchId = item.BatchId,
                         TransitionType = transitionType,
-                        SourceZone = GetZone(source),
-                        TargetZone = GetZone(target),
-                        TimestampSourceName = item.Timestamps.ElementAt(i - 1).Key,
-                        TimestampTargetName = item.Timestamps.ElementAt(i).Key,
+                        SourceZone = GetZone(sourceTimestamp),
+                        TargetZone = GetZone(targetTimestamp),
+                        TimestampSourceName = sourceTimestamp,
+                        TimestampTargetName = targetTimestamp,
                         TimestampSource = item.Timestamps.ElementAt(i - 1).Value,
                         TimestampTarget = item.Timestamps.ElementAt(i).Value,
                         LatencyMilliseconds = (item.Timestamps.ElementAt(i).Value - item.Timestamps.ElementAt(i - 1).Value).TotalMilliseconds
                     });
                 }
+                await PublishLatenciesToBridge(itemLatencies);
+
+                await PublishItemDetailsToBridge(item, itemLatencies);
+            }
+        }
+
+        private ItemTransitionTypeEnum GetTransitionType(string source, string target)
+        {
+            var transitionType = ItemTransitionTypeEnum.Unknown;
+            if (source.EndsWith("_created"))
+            {
+                transitionType = ItemTransitionTypeEnum.ZoneEnter;
+            }
+            else if (target.EndsWith("_terminated"))
+            {
+                transitionType = ItemTransitionTypeEnum.Termination;
+            }
+            else if (TimestampIsTransition(target))
+            {
+                if(!TransitionIsConveyorChain(source) && TransitionSourceIsConveyor(source) && !TransitionIsConveyorChain(target) && TransitionTargetIsConveyor(target))
+                {
+                    transitionType = ItemTransitionTypeEnum.ZoneEnter;
+                }
+                else if (!TransitionIsConveyorChain(target) && (!TransitionSourceIsConveyor(source) && TransitionTargetIsConveyor(target)))
+                {
+                    transitionType = ItemTransitionTypeEnum.ZoneEnter;
+                }
+                else if (TimestampIsConveyorOut(source) && TransitionIsConveyorChain(target))
+                {
+                    transitionType = ItemTransitionTypeEnum.ConveyorChain;
+                }
+                else if (TimestampIsConveyorOut(source) && !TransitionTargetIsConveyor(target))
+                {
+                    transitionType = ItemTransitionTypeEnum.ZoneExit;
+                }
+            }
+            else if (TimestampIsTransition(source) && TimestampIsConveyorIn(target) && !TransitionIsConveyorChain(target))
+            {
+                transitionType = ItemTransitionTypeEnum.ConveyorEnter;
+            }
+            else if (TimestampIsConveyorIn(source) && TimestampIsConveyorOut(target))
+            {
+                transitionType = ItemTransitionTypeEnum.ConveyorTransport;
+            }
+            else
+            {
+                transitionType = ItemTransitionTypeEnum.Unknown;
+            }
+            return transitionType;
+        }
+
+        private async Task PublishItemDetailsToBridge(Item item, List<ItemTransitionLatency> itemLatencies)
+        {
+            if(item == null || item.Timestamps == null)
+            {
+                Console.WriteLine($"[{DateTime.UtcNow}]\tItem is null or has no timestamps.");
+                return;
             }
 
+            if (_config.EnableBridgeToIoTMQ && item.Timestamps.Count > 1)
+            {
+                //Total Diference beteween creation timestamp and termination timestamp
+                double lifecycleDurationMilliseconds = (item.Timestamps.LastOrDefault().Value - item.Timestamps.FirstOrDefault().Value).TotalMilliseconds;
 
+                //Total Latency without ConveyorTransport 
+                double totalLatency = lifecycleDurationMilliseconds - itemLatencies.Where(x => x.TransitionType == ItemTransitionTypeEnum.ConveyorTransport).Sum(x => x.LatencyMilliseconds);
+
+                //Publish item to IoTMQ
+                var itemWithRawTs = new
+                {
+                    item.Id,
+                    item.BatchId,
+                    RawTimestamps = String.Join("; ", item.Timestamps.Select(x => $"{x.Key} = {x.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ")}").ToArray()),
+                    item.ItemStatus,
+
+                    LifecycleTotalMilliseconds = lifecycleDurationMilliseconds,
+                    LatencyTotal = totalLatency,
+                    TransitionCount = itemLatencies.Count,
+                    TransitionAvg = totalLatency / itemLatencies.Count,
+
+                    ConveyorCount = itemLatencies.Where(x => x.TransitionType == ItemTransitionTypeEnum.ConveyorEnter).DefaultIfEmpty().Select(x => x?.SourceZone).Count(),
+                    ConveyorEnterTotal = itemLatencies.Where(x => x.TransitionType == ItemTransitionTypeEnum.ConveyorEnter).DefaultIfEmpty().Sum(x => x?.LatencyMilliseconds),
+                    ConveyorEnterAvg = itemLatencies.Where(x => x.TransitionType == ItemTransitionTypeEnum.ConveyorEnter).DefaultIfEmpty().Average(x => x?.LatencyMilliseconds),
+
+                    ConveyorTransportTotal = itemLatencies.Where(x => x.TransitionType == ItemTransitionTypeEnum.ConveyorTransport).DefaultIfEmpty().Sum(x => x?.LatencyMilliseconds),
+                    ConveyorTransportAvg = itemLatencies.Where(x => x.TransitionType == ItemTransitionTypeEnum.ConveyorTransport).DefaultIfEmpty().Average(x => x?.LatencyMilliseconds),
+
+                    ConveyorChainTotal = itemLatencies.Where(x => x.TransitionType == ItemTransitionTypeEnum.ConveyorChain).DefaultIfEmpty().Sum(x => x?.LatencyMilliseconds),
+                    ConveyorChainAvg = itemLatencies.Where(x => x.TransitionType == ItemTransitionTypeEnum.ConveyorChain).DefaultIfEmpty().Average(x => x?.LatencyMilliseconds),
+
+                    ZoneCount = itemLatencies.Where(x => x.TransitionType == ItemTransitionTypeEnum.ZoneEnter).DefaultIfEmpty().Select(x => x?.SourceZone).Count(),
+                    ZoneEnterTotal = itemLatencies.Where(x => x.TransitionType == ItemTransitionTypeEnum.ZoneEnter).DefaultIfEmpty().Sum(x => x?.LatencyMilliseconds),
+                    ZoneEnterAvg = itemLatencies.Where(x => x.TransitionType == ItemTransitionTypeEnum.ZoneEnter).DefaultIfEmpty().Average(x => x?.LatencyMilliseconds),
+
+                    ZoneExitTotal = itemLatencies.Where(x => x.TransitionType == ItemTransitionTypeEnum.ZoneExit).DefaultIfEmpty().Sum(x => x?.LatencyMilliseconds),
+                    ZoneExitAvg = itemLatencies.Where(x => x.TransitionType == ItemTransitionTypeEnum.ZoneExit).DefaultIfEmpty().Average(x => x?.LatencyMilliseconds),
+
+                    Termination = itemLatencies.Where(x => x.TransitionType == ItemTransitionTypeEnum.Termination).DefaultIfEmpty().Sum(x => x?.LatencyMilliseconds),
+                };
+                await _iotmqBridge.PublishMessageAsync(itemWithRawTs.ToUtf8Bytes(), TopicsDefinition.ItemsProcessed());
+            }
+        }
+
+        private async Task PublishLatenciesToBridge(List<ItemTransitionLatency> itemLatencies)
+        {
             foreach (var itemLatency in itemLatencies)
             {
                 if (_config.EnableBridgeToIoTMQ)
@@ -177,35 +237,51 @@ namespace Mqtt.ItemGenerator
                     await _mqtt.PublishMessageAsync(itemLatency.ToUtf8Bytes(), TopicsDefinition.ItemsLatencies());
                 }
             }
-
-            if(_config.EnableBridgeToIoTMQ)
-            {
-                //Publish item to IoTMQ
-                var itemWithRawTs = new
-                {
-                    item.Id,
-                    item.BatchId,
-                    RawTimestamps = String.Join("; ", item.Timestamps.Select(x => $"{x.Key} = {x.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ")}").ToArray()),
-                    item.ItemStatus
-                };
-                await _iotmqBridge.PublishMessageAsync(itemWithRawTs.ToUtf8Bytes(), TopicsDefinition.ItemsProcessed());
-            }
         }
 
-        private bool IsConveyor(string source)
+        private bool TimestampIsConveyor(string timestampName)
         {
-            return Regex.IsMatch(source, @"[a-zA-Z]{3,}_c\d+");
+            return Regex.IsMatch(timestampName, @"^[a-zA-Z]{3,}_c\d+(_in|_out)$");
         }
 
-        private string GetZone(string source)
+        private bool TimestampIsTransition(string timestampName)
         {
-            if (IsConveyor(source))
+            return Regex.IsMatch(timestampName, @"_to_");
+        }
+
+        private bool TransitionTargetIsConveyor(string timestampName)
+        {
+            return Regex.IsMatch(timestampName, @"_to_[a-zA-Z]{3,}_c\d+$");
+        }
+
+        private bool TransitionSourceIsConveyor(string timestampName)
+        {
+            return Regex.IsMatch(timestampName, @"^[a-zA-Z]{3,}_c\d+_to_");
+        }
+
+        private bool TransitionIsConveyorChain(string timestampName)
+        {
+            return Regex.IsMatch(timestampName, @"^[a-zA-Z]{3,}_c\d+_to_[a-zA-Z]{3,}_c\d+$");
+        }
+        private bool TimestampIsConveyorIn(string timestampName)
+        {
+            return Regex.IsMatch(timestampName, @"_in$");
+        }
+
+        private bool TimestampIsConveyorOut(string timestampName)
+        {
+            return Regex.IsMatch(timestampName, @"_out$");
+        }
+
+        private string GetZone(string timestamp)
+        {
+            if (TimestampIsConveyor(timestamp) || timestamp.EndsWith("_created") || timestamp.EndsWith("_terminated") || TimestampIsTransition(timestamp))
             {
-                return source.Split("_")[0];
+                return timestamp.Split("_")[0];
             }
             else
             {
-                return source;
+                return timestamp;
             };
         }
 

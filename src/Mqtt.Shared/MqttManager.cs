@@ -4,6 +4,7 @@ using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Protocol;
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Runtime;
@@ -17,7 +18,7 @@ public class MqttManager
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly Stopwatch _aliveWatch = Stopwatch.StartNew();
 
-    private Dictionary<string, Func<ArraySegment<byte>, Task>> _topicHandlers= new();
+    private ConcurrentDictionary<string, Func<ArraySegment<byte>, Task>> _topicHandlers= new();
 
     public MqttManager(MqttConfig config, CancellationTokenSource cancellationTokenSource)
     {
@@ -116,9 +117,16 @@ public class MqttManager
 
         await _mqttClient.SubscribeAsync(topic, (MqttQualityOfServiceLevel)_config.QoS).ConfigureAwait(false);
 
-        _topicHandlers.Add(topic, topicHandler);
+        if (_topicHandlers.TryAdd(topic, topicHandler))
+        {
 
-        Console.WriteLine($"[{DateTime.UtcNow}]\tClient {_config.ClientId} subscribed to {topic} topic.");
+            Console.WriteLine($"[{DateTime.UtcNow}]\tClient {_config.ClientId} subscribed to {topic} topic.");
+        }
+        else
+        {
+            Console.WriteLine($"[{DateTime.UtcNow}]\tClient {_config.ClientId} already subscribed to {topic} topic.");
+            throw new Exception($"Client {_config.ClientId} already subscribed to {topic} topic.");
+        }
     }
     public async Task UnsubscribeTopicAsync(string topic)
     {

@@ -5,7 +5,7 @@ metadata:
   namespace: default
 data:
   ZoneSimulatorConfig__Zone: "rcp"
-  ZoneSimulatorConfig__ItemsSource: "src"
+  ZoneSimulatorConfig__ItemsSource: "rcp"
   ZoneSimulatorConfig__ItemsDestination: "pac"
   ZoneSimulatorConfig__NumConveyors: "3"
   ZoneSimulatorConfig__ConveyorTransitMilliseconds: "5000"

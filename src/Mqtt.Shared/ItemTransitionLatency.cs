@@ -4,13 +4,14 @@ namespace Mqtt.ItemGenerator
 {
     public enum ItemTransitionTypeEnum
     {
+        Creation,
         ZoneEnter,
         ZoneExit,
         ConveyorEnter,
         ConveyorChain,
         ConveyorTransport,
-        Unknown,
-        Termination
+        Termination,
+        Unknown
     }
     public class ItemTransitionLatency
     {

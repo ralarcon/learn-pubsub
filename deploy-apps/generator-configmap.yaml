@@ -4,7 +4,7 @@ metadata:
   name: items-generator-config
   namespace: default
 data:
-  ItemGeneratorConfig__ItemsGeneration: "src"
+  ItemGeneratorConfig__ItemsGeneration: "rcp"
   ItemGeneratorConfig__ItemsTermination: "end"
   ItemGeneratorConfig__EnableGeneration: "true"
   ItemGeneratorConfig__EnableTermination: "true"
