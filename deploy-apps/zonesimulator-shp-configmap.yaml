@@ -13,6 +13,6 @@ data:
   MqttConfig__MqttServer: "iot-pocs-sim-1"
   MqttConfig__MqttPort: "1883"
   MqttConfig__QoS: "1"
-  MqttConfig__TrackStatus: "true"
+  MqttConfig__TrackStatus: "false"
   MqttConfig__ClientId: "Mqtt.ZoneSimulator.Shp"
   MqttConfig__Username: "client1"

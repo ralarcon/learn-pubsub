@@ -1,0 +1,143 @@
+{
+  "properties": {
+    "enabled": false,
+    "input": {
+      "displayName": "input",
+      "type": "input/mqtt@v1",
+      "next": [
+        "node-1c200b"
+      ],
+      "viewOptions": {
+        "position": {
+          "x": 0,
+          "y": 80
+        }
+      },
+      "broker": "tls://aio-mq-dmqtt-frontend:8883",
+      "qos": 0,
+      "cleanSession": true,
+      "topics": [
+        "simulator/items/latencies"
+      ],
+      "authentication": {
+        "type": "serviceAccountToken"
+      },
+      "format": {
+        "type": "json"
+      },
+      "partitionCount": 1,
+      "partitionStrategy": {
+        "type": "key",
+        "expression": ".topic"
+      }
+    },
+    "stages": {
+      "node-1c200b": {
+        "displayName": "Add AIO Timestamp to payload",
+        "type": "processor/transform@v1",
+        "next": [
+          "output"
+        ],
+        "viewOptions": {
+          "position": {
+            "x": 0,
+            "y": 256
+          }
+        },
+        "expression": ".payload.Timestamp = .systemProperties.timestamp"
+      },
+      "output": {
+        "displayName": "To Fabrib - SimulationLatencies",
+        "type": "output/fabric@v1",
+        "viewOptions": {
+          "position": {
+            "x": 0,
+            "y": 432
+          }
+        },
+        "url": "https://msit-onelake.pbidedicated.windows.net",
+        "workspace": "5e2e5bf7-e235-46c8-8ef8-3a6cb9d3e47f",
+        "lakehouse": "93557b32-e6eb-4a9d-9b0c-af2ed9749293",
+        "table": "Latencies",
+        "columns": [
+          {
+            "name": "Timestamp",
+            "type": "timestamp",
+            "path": ".Timestamp"
+          },
+          {
+            "name": "TransitionType",
+            "type": "string",
+            "path": ".TransitionType"
+          },
+          {
+            "name": "TimestampSourceName",
+            "type": "string",
+            "path": ".TimestampSourceName"
+          },
+          {
+            "name": "TimestampTargetName",
+            "type": "string",
+            "path": ".TimestampTargetName"
+          },
+          {
+            "name": "LatencyMilliseconds",
+            "type": "double",
+            "path": ".LatencyMilliseconds"
+          },
+          {
+            "name": "SourceZone",
+            "type": "string",
+            "path": ".SourceZone"
+          },
+          {
+            "name": "TargetZone",
+            "type": "string",
+            "path": ".TargetZone"
+          },
+          {
+            "name": "Id",
+            "type": "integer",
+            "path": ".Id"
+          },
+          {
+            "name": "BatchId",
+            "type": "string",
+            "path": ".BatchId"
+          },
+          {
+            "name": "TimestampSource",
+            "type": "timestamp",
+            "path": ".TimestampSource"
+          },
+          {
+            "name": "TimestampTarget",
+            "type": "timestamp",
+            "path": ".TimestampTarget"
+          }
+        ],
+        "authentication": {
+          "type": "servicePrincipal",
+          "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
+          "clientId": "a4ba3edc-1df8-4959-92c1-1f3207f5a4e9",
+          "clientSecret": "AIOFabricSecret"
+        },
+        "batch": {
+          "time": "1m",
+          "path": ".payload"
+        }
+      }
+    },
+    "provisioningState": "Accepted"
+  },
+  "tags": {
+    "test": "Test"
+  },
+  "extendedLocation": {
+    "name": "/subscriptions/cff5d937-9797-41da-b990-ba5295efb820/resourceGroups/iot-pocs-rg/providers/Microsoft.ExtendedLocation/customLocations/iot-pocs-vm1-custom-location",
+    "type": "CustomLocation"
+  },
+  "name": "upload-latencies",
+  "type": "microsoft.iotoperationsdataprocessor/instances/pipelines",
+  "location": "westeurope"
+}

@@ -1,74 +1,61 @@
-﻿using Mqtt.Shared;
+﻿using Microsoft.Extensions.Hosting;
+using Mqtt.Shared;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static System.TimeZoneInfo;
 
 namespace Mqtt.ItemGenerator
 {
-    internal class ItemTerminator
+    public class ItemStatsService : BackgroundService
     {
         private readonly ItemGeneratorConfig _config;
         private readonly MqttManager _mqtt;
         private readonly MqttManager _iotmqBridge;
         private readonly Timer _reportStatusTimer;
         private int _currentCount;
+        private readonly ConcurrentDictionary<int, Timer> _removalTimers;
+        private readonly ConcurrentQueue<Item> _terminateItems = new ConcurrentQueue<Item>();
 
-        public ItemTerminator(ItemGeneratorConfig config, MqttManager mqtt, MqttManager iotmqBridge)
+        public ItemStatsService(ItemGeneratorConfig config, MqttManager mqtt, MqttManager iotmqBridge)
         {
             _config = config;
             _mqtt = mqtt;
             _iotmqBridge = iotmqBridge;
             _reportStatusTimer = PrepareReportTimer();
+            _removalTimers = new ConcurrentDictionary<int, Timer>();
         }
 
 
-        public async Task StartTerminatingItemsAsync()
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            Console.WriteLine($"[{DateTime.UtcNow}]\tReady to remove items from zone '{_config.ItemsTermination}' after 30 seconds of arrival.");
-            
-            await _mqtt.SubscribeTopicAsync(TopicsDefinition.Items(_config.ItemsTermination), async (payload) =>
+
+            Console.WriteLine("Background ItemStatsProcessor task is running...");
+            if (_config.EnableTermination)
             {
-                var timestamp = DateTime.UtcNow;
-                if (payload.Array != null)
-                {
-                    var item = payload.Array.DeserializeItem();   
-                    if (item != null)
-                    {
-                        item.Timestamps?.Add($"{_config.ItemsTermination}_terminated".ToLower(), timestamp);
-                        item.ItemStatus = ItemStatusEnum.Delivered;
-                        await _mqtt.PublishMessageAsync(item.ToItemBytes(), TopicsDefinition.ItemsTerminated());
-                        _currentCount++;
-                    }
-                }
-            });
-
-            await TerminateItemsAsync();
+                await StartGatheringTerminatedItemStats();
+            }
+            else
+            {
+                Console.WriteLine($"[{DateTime.UtcNow}]\tItems termination is disabled no stats are being gathered.");
+            }
         }
-
-        private async Task TerminateItemsAsync()
+        private async Task StartGatheringTerminatedItemStats()
         {
             await _mqtt.SubscribeTopicAsync(TopicsDefinition.ItemsTerminated(), async (payload) =>
             {
                 if (payload.Array != null)
                 {
-                    //Delay a bit to mark the status to avoid colisions
-                    await Task.Delay(500);
-
                     var item = payload.Array.DeserializeItem();
                     if (item != null)
                     {
                         await CalulateAndPublishLatenciesAsync(item);
 
-                        await RemoveItemFromStatusAsync(item);
+                        //await RemoveItemFromStatusAsync(item);
+                        ProgramItemRemovalFromStatus(item);
                     }
                 }
             });
@@ -76,34 +63,37 @@ namespace Mqtt.ItemGenerator
 
         private async Task RemoveItemFromStatusAsync(Item item)
         {
-            //Update item position to destination
-            ItemPosition itemPosition = new()
-            {
-                Id = item.Id,
-                BatchId = item.BatchId,
-                Zone = _config.ItemsTermination,
-                Position = "Destination",
-                Status = item.ItemStatus,
-                TimeStamp = DateTime.UtcNow
-            };
-            await _mqtt.PublishStatusAsync(itemPosition.ToItemPositionBytes(), TopicsDefinition.ItemStatus(item.Id));
-
             await Task.Delay(_config.TerminationRetentionMilliseconds - 500);
-
             //Remove Item from status
             await _mqtt.RemoveStatusAsync(TopicsDefinition.ItemStatus(item.Id));
+        }
+
+
+        private void ProgramItemRemovalFromStatus(Item item)
+        {
+            //Execute removal after _config.TerminationRetentionMilliseconds
+            Timer timer = new Timer(async (state) =>
+            {
+                if (!_removalTimers.TryRemove(item.Id, out var bogus))
+                {
+                    Console.WriteLine($"[{DateTime.UtcNow}]\tItem {item.Id} removal timer not found.");
+                }
+                await _mqtt.RemoveStatusAsync(TopicsDefinition.ItemStatus(item.Id)).ConfigureAwait(false);
+            }, null, _config.TerminationRetentionMilliseconds, Timeout.Infinite);
+
+            _removalTimers.TryAdd(item.Id, timer);
         }
 
         private async Task CalulateAndPublishLatenciesAsync(Item item)
         {
             List<ItemTransitionLatency> itemLatencies = new();
 
-            if (item.Timestamps?.Count > 1)
+            if (item.Timestamps?.Count > 0)
             {
-                for (int i = 1; i < item.Timestamps.Count; i++)
+                for (int i = 0; i < item.Timestamps.Count - 1; i++)
                 {
-                    var sourceTimestamp = item.Timestamps.ElementAt(i - 1).Key;
-                    var targetTimestamp = item.Timestamps.ElementAt(i).Key;
+                    var sourceTimestamp = item.Timestamps.ElementAt(i).Key;
+                    var targetTimestamp = item.Timestamps.ElementAt(i + 1).Key;
 
                     ItemTransitionTypeEnum transitionType = GetTransitionType(sourceTimestamp, targetTimestamp);
 
@@ -116,23 +106,24 @@ namespace Mqtt.ItemGenerator
                         TargetZone = GetZone(targetTimestamp),
                         TimestampSourceName = sourceTimestamp,
                         TimestampTargetName = targetTimestamp,
-                        TimestampSource = item.Timestamps.ElementAt(i - 1).Value,
-                        TimestampTarget = item.Timestamps.ElementAt(i).Value,
-                        LatencyMilliseconds = (item.Timestamps.ElementAt(i).Value - item.Timestamps.ElementAt(i - 1).Value).TotalMilliseconds
+                        TimestampSource = item.Timestamps.ElementAt(i).Value,
+                        TimestampTarget = item.Timestamps.ElementAt(i + 1).Value,
+                        LatencyMilliseconds = (item.Timestamps.ElementAt(i + 1).Value - item.Timestamps.ElementAt(i).Value).TotalMilliseconds
                     });
                 }
-                await PublishLatenciesToBridge(itemLatencies);
+                await PublishLatenciesToBridge(itemLatencies).ConfigureAwait(false);
 
-                await PublishItemDetailsToBridge(item, itemLatencies);
+                await PublishItemDetailsToBridge(item, itemLatencies).ConfigureAwait(false);
             }
         }
+
 
         private ItemTransitionTypeEnum GetTransitionType(string source, string target)
         {
             var transitionType = ItemTransitionTypeEnum.Unknown;
             if (source.EndsWith("_created"))
             {
-                transitionType = ItemTransitionTypeEnum.ZoneEnter;
+                transitionType = ItemTransitionTypeEnum.Creation;
             }
             else if (target.EndsWith("_terminated"))
             {
@@ -140,7 +131,7 @@ namespace Mqtt.ItemGenerator
             }
             else if (TimestampIsTransition(target))
             {
-                if(!TransitionIsConveyorChain(source) && TransitionSourceIsConveyor(source) && !TransitionIsConveyorChain(target) && TransitionTargetIsConveyor(target))
+                if (!TransitionIsConveyorChain(source) && TransitionSourceIsConveyor(source) && !TransitionIsConveyorChain(target) && TransitionTargetIsConveyor(target))
                 {
                     transitionType = ItemTransitionTypeEnum.ZoneEnter;
                 }
@@ -174,7 +165,7 @@ namespace Mqtt.ItemGenerator
 
         private async Task PublishItemDetailsToBridge(Item item, List<ItemTransitionLatency> itemLatencies)
         {
-            if(item == null || item.Timestamps == null)
+            if (item == null || item.Timestamps == null)
             {
                 Console.WriteLine($"[{DateTime.UtcNow}]\tItem is null or has no timestamps.");
                 return;
@@ -220,7 +211,7 @@ namespace Mqtt.ItemGenerator
 
                     Termination = itemLatencies.Where(x => x.TransitionType == ItemTransitionTypeEnum.Termination).DefaultIfEmpty().Sum(x => x?.LatencyMilliseconds),
                 };
-                await _iotmqBridge.PublishMessageAsync(itemWithRawTs.ToUtf8Bytes(), TopicsDefinition.ItemsProcessed());
+                await _iotmqBridge.PublishMessageAsync(itemWithRawTs.ToUtf8Bytes(), TopicsDefinition.ItemsProcessed()).ConfigureAwait(false);
             }
         }
 
@@ -230,11 +221,11 @@ namespace Mqtt.ItemGenerator
             {
                 if (_config.EnableBridgeToIoTMQ)
                 {
-                    await _iotmqBridge.PublishMessageAsync(itemLatency.ToUtf8Bytes(), TopicsDefinition.ItemsLatencies());
+                    await _iotmqBridge.PublishMessageAsync(itemLatency.ToUtf8Bytes(), TopicsDefinition.ItemsLatencies()).ConfigureAwait(false);
                 }
                 else
                 {
-                    await _mqtt.PublishMessageAsync(itemLatency.ToUtf8Bytes(), TopicsDefinition.ItemsLatencies());
+                    await _mqtt.PublishMessageAsync(itemLatency.ToUtf8Bytes(), TopicsDefinition.ItemsLatencies()).ConfigureAwait(false);
                 }
             }
         }
@@ -285,11 +276,12 @@ namespace Mqtt.ItemGenerator
             };
         }
 
+
         private Timer PrepareReportTimer()
         {
             return new Timer((state) =>
             {
-                Console.WriteLine($"[{DateTime.UtcNow}]\t{_currentCount} items terminated.");
+                Console.WriteLine($"[{DateTime.UtcNow}]\t{_currentCount} items stats processed.");
             }, null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
         }
     }

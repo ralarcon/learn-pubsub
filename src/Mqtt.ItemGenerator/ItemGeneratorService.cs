@@ -1,4 +1,6 @@
-﻿using Mqtt.Shared;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Mqtt.Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,24 +9,42 @@ using System.Threading.Tasks;
 
 namespace Mqtt.ItemGenerator
 {
-    internal class ItemGenerator
+    public class ItemGeneratorService : BackgroundService
     {
+        private readonly ILogger<ItemGeneratorService> _logger;
         private readonly ItemGeneratorConfig _config;
         private readonly MqttManager _mqtt;
-        private readonly CancellationToken _cancellationToken;
         private readonly Timer _reportStatusTimer;
         private int _currentCount;
 
-        public ItemGenerator(ItemGeneratorConfig config, MqttManager mqtt, CancellationToken cancellationToken)
+        public ItemGeneratorService(ItemGeneratorConfig config, MqttManager mqtt, ILogger<ItemGeneratorService> logger) 
         {
+            _logger = logger;
             _config = config;
             _mqtt = mqtt;
-            _cancellationToken = cancellationToken;
             _reportStatusTimer = AliveReportTimer();
         }
 
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
 
-        public async Task StartGeneratingItems()
+            Console.WriteLine("Background ItemGenerator task is running...");
+            if (_config.EnableGeneration)
+            {
+                if (_config.SimulationStartDelayMilliseconds > 0)
+                {
+                    Console.WriteLine($"[{DateTime.UtcNow}]\tItem Generation start delayed by {_config.SimulationStartDelayMilliseconds} milliseconds...");
+                    await Task.Delay(_config.SimulationStartDelayMilliseconds);
+                }
+                await StartGeneratingItems(stoppingToken);
+            }
+            else
+            {
+                Console.WriteLine($"[{DateTime.UtcNow}]\tItems generation is disabled.");
+            }
+        }
+
+        private async Task StartGeneratingItems(CancellationToken cancellationToken)
         {
             Console.WriteLine($"[{DateTime.UtcNow}]\tItems generating started. Frequency: {_config.FrequencyMilliseconds} ms; MaxItems: {_config.MaxItems}.");
             _currentCount = 0;
@@ -32,7 +52,7 @@ namespace Mqtt.ItemGenerator
 
             Guid batchId = Guid.NewGuid();
 
-            while ((_config.MaxItems == 0 || _currentCount < _config.MaxItems) && !_cancellationToken.IsCancellationRequested)
+            while ((_config.MaxItems == 0 || _currentCount < _config.MaxItems) && !cancellationToken.IsCancellationRequested)
             {
                 _currentCount++;
                 Item item = new()
@@ -59,7 +79,7 @@ namespace Mqtt.ItemGenerator
 
                 await Task.Delay(_config.FrequencyMilliseconds);
             }
-            if (_cancellationToken.IsCancellationRequested)
+            if (cancellationToken.IsCancellationRequested)
             {
                 Console.WriteLine($"[{DateTime.UtcNow}]\tItems generation stopped. Cancellation is requested.");
             }

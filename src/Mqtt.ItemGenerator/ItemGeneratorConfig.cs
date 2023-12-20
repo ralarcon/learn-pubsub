@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Mqtt.ItemGenerator
 {
-    internal class ItemGeneratorConfig
+    public class ItemGeneratorConfig
     {
         public int FrequencyMilliseconds { get; set; } = 1000; //Default 1 generation per second
         public int MaxItems { get; set; } = 0; //Zero or negative == infinite

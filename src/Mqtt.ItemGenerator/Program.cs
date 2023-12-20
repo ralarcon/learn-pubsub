@@ -1,4 +1,6 @@
-﻿using Mqtt.ItemGenerator;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Mqtt.ItemGenerator;
 using Mqtt.Shared;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -29,26 +31,44 @@ Console.CancelKeyPress += async (sender, eventArgs) =>
     Environment.Exit(0);
 };
 
+var host = new HostBuilder()
+            .ConfigureServices((hostContext, services) =>
+            {
+                // Add logging if needed
+                services.AddLogging();
+                services.AddSingleton(config);
+                services.AddSingleton(mqttManager);
+                services.AddSingleton(iotmqBridge); 
 
-if (config.EnableTermination)
-{
-    Console.WriteLine($"[{DateTime.UtcNow}]\tItem Termination Zone: '{config.ItemsTermination}'.");
-    ItemTerminator terminator = new(config, mqttManager, iotmqBridge);
-    await terminator.StartTerminatingItemsAsync();
-}
+                // Add background tasks
+                services.AddHostedService<ItemGeneratorService>();
+                services.AddHostedService<ItemTerminatorService>();
+                services.AddHostedService<ItemStatsService>();
+            })
+            .Build();
 
-if (config.EnableGeneration)
-{
-    if (config.SimulationStartDelayMilliseconds > 0)
-    {
-        Console.WriteLine($"[{DateTime.UtcNow}]\tItem Generation start delayed by {config.SimulationStartDelayMilliseconds} milliseconds...");
-        await Task.Delay(config.SimulationStartDelayMilliseconds);
-    }
+await host.RunAsync();
 
-    //Start Generating Clases
-    ItemGenerator producer = new(config, mqttManager, cancellationTokenSource.Token);
-    await producer.StartGeneratingItems();
-}
+
+//if (config.EnableTermination)
+//{
+//    Console.WriteLine($"[{DateTime.UtcNow}]\tItem Termination Zone: '{config.ItemsTermination}'.");
+//    ItemTerminator terminator = new(config, iotmqBridge);
+//    await terminator.StartTerminatingItemsAsync().ConfigureAwait(false);
+//}
+
+//if (config.EnableGeneration)
+//{
+//    if (config.SimulationStartDelayMilliseconds > 0)
+//    {
+//        Console.WriteLine($"[{DateTime.UtcNow}]\tItem Generation start delayed by {config.SimulationStartDelayMilliseconds} milliseconds...");
+//        await Task.Delay(config.SimulationStartDelayMilliseconds);
+//    }
+
+//    //Start Generating Clases
+//    ItemGenerator producer = new(config, mqttManager, cancellationTokenSource.Token);
+//    await producer.StartGeneratingItems().ConfigureAwait(false);
+//}
 
 
 Console.ReadLine();

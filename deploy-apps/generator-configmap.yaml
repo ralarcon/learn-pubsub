@@ -15,7 +15,7 @@ data:
   ItemGeneratorConfig__TerminationRetentionMilliseconds: "30000"
   MqttConfig__MqttServer: "iot-pocs-sim-1"
   MqttConfig__MqttPort: "1883"
-  MqttConfig__TrackStatus: "true"
+  MqttConfig__TrackStatus: "false"
   MqttConfig__QoS: "1"
   MqttConfig__ClientId: "Mqtt.ItemsGenerator"
   MqttConfig__Username: "client1"

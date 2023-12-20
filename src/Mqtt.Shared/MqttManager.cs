@@ -90,7 +90,8 @@ public class MqttManager
             var appMessage = new MqttApplicationMessageBuilder()
                 .WithTopic(topic)
                 .WithPayload(payload)
-                .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)_config.QoS)
+                //.WithQualityOfServiceLevel((MqttQualityOfServiceLevel)_config.QoS)
+                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
                 .WithRetainFlag(true)
                 .Build();
 

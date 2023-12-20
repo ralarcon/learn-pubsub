@@ -1,0 +1,188 @@
+{
+  "properties": {
+    "enabled": false,
+    "input": {
+      "displayName": "input",
+      "type": "input/mqtt@v1",
+      "next": [
+        "node-1c200b"
+      ],
+      "viewOptions": {
+        "position": {
+          "x": 0,
+          "y": 80
+        }
+      },
+      "broker": "tls://aio-mq-dmqtt-frontend:8883",
+      "qos": 0,
+      "cleanSession": true,
+      "topics": [
+        "simulator/items/processed"
+      ],
+      "authentication": {
+        "type": "serviceAccountToken"
+      },
+      "format": {
+        "type": "json"
+      },
+      "partitionCount": 1,
+      "partitionStrategy": {
+        "type": "key",
+        "expression": ".topic"
+      }
+    },
+    "stages": {
+      "node-1c200b": {
+        "displayName": "Add AIO Timestamp to payload",
+        "type": "processor/transform@v1",
+        "next": [
+          "output"
+        ],
+        "viewOptions": {
+          "position": {
+            "x": 0,
+            "y": 256
+          }
+        },
+        "expression": ".payload.Timestamp = .systemProperties.timestamp"
+      },
+      "output": {
+        "displayName": "To Fabric - Items",
+        "type": "output/fabric@v1",
+        "viewOptions": {
+          "position": {
+            "x": 0,
+            "y": 432
+          }
+        },
+        "url": "https://msit-onelake.pbidedicated.windows.net",
+        "workspace": "5e2e5bf7-e235-46c8-8ef8-3a6cb9d3e47f",
+        "lakehouse": "93557b32-e6eb-4a9d-9b0c-af2ed9749293",
+        "table": "Items",
+        "columns": [
+          {
+            "name": "Timestamp",
+            "type": "timestamp",
+            "path": ".Timestamp"
+          },
+          {
+            "name": "Id",
+            "type": "integer",
+            "path": ".Id"
+          },
+          {
+            "name": "BatchId",
+            "type": "string",
+            "path": ".BatchId"
+          },
+          {
+            "name": "RawTimestamps",
+            "type": "string",
+            "path": ".RawTimestamps"
+          },
+          {
+            "name": "LifecycleTotalMilliseconds",
+            "type": "float",
+            "path": ".LifecycleTotalMilliseconds"
+          },
+          {
+            "name": "LatencyTotal",
+            "type": "double",
+            "path": ".LatencyTotal"
+          },
+          {
+            "name": "TransitionCount",
+            "type": "integer",
+            "path": ".TransitionCount"
+          },
+          {
+            "name": "TransitionAvg",
+            "type": "double",
+            "path": ".TransitionAvg"
+          },
+          {
+            "name": "ConveyorCount",
+            "type": "integer",
+            "path": ".ConveyorCount"
+          },
+          {
+            "name": "ConveyorEnterTotal",
+            "type": "double",
+            "path": ".ConveyorEnterTotal"
+          },
+          {
+            "name": "ConveyorEnterAvg",
+            "type": "double",
+            "path": ".ConveyorEnterAvg"
+          },
+          {
+            "name": "ConveyorTransportTotal",
+            "type": "double",
+            "path": ".ConveyorTransportTotal"
+          },
+          {
+            "name": "ConveyorTransportAvg",
+            "type": "double",
+            "path": ".ConveyorTransportAvg"
+          },
+          {
+            "name": "ConveyorChainTotal",
+            "type": "double",
+            "path": ".ConveyorChainTotal"
+          },
+          {
+            "name": "ZoneCount",
+            "type": "integer",
+            "path": ".ZoneCount"
+          },
+          {
+            "name": "ZoneEnterTotal",
+            "type": "double",
+            "path": ".ZoneEnterTotal"
+          },
+          {
+            "name": "ZoneEnterAvg",
+            "type": "double",
+            "path": ".ZoneEnterAvg"
+          },
+          {
+            "name": "ZoneExitTotal",
+            "type": "double",
+            "path": ".ZoneExitTotal"
+          },
+          {
+            "name": "ZoneExitAvg",
+            "type": "double",
+            "path": ".ZoneExitAvg"
+          },
+          {
+            "name": "Termination",
+            "type": "double",
+            "path": ".Termination"
+          }
+        ],
+        "authentication": {
+          "type": "servicePrincipal",
+          "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
+          "clientId": "a4ba3edc-1df8-4959-92c1-1f3207f5a4e9",
+          "clientSecret": "AIOFabricSecret"
+        },
+        "batch": {
+          "time": "1m",
+          "path": ".payload"
+        }
+      }
+    },
+    "provisioningState": "Accepted"
+  },
+  "tags": {
+    "test": "Test"
+  },
+  "extendedLocation": {
+    "name": "/subscriptions/cff5d937-9797-41da-b990-ba5295efb820/resourceGroups/iot-pocs-rg/providers/Microsoft.ExtendedLocation/customLocations/iot-pocs-vm1-custom-location",
+    "type": "CustomLocation"
+  },
+  "name": "upload-items-processed",
+  "type": "microsoft.iotoperationsdataprocessor/instances/pipelines",
+  "location": "westeurope"
+}
