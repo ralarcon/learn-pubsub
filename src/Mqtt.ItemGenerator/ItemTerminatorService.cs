@@ -21,15 +21,14 @@ namespace Mqtt.ItemGenerator
     {
         private readonly ILogger<ItemTerminatorService> _logger;
         private readonly ItemGeneratorConfig _config;
-        private readonly MqttManager _mqtt;
+        private MqttManager _mqtt = default!;
         private readonly Timer _reportStatusTimer;
         private int _currentCount;
 
-        public ItemTerminatorService(ItemGeneratorConfig config, MqttManager mqtt, ILogger<ItemTerminatorService> logger)
+        public ItemTerminatorService(ItemGeneratorConfig config, ILogger<ItemTerminatorService> logger)
         {
             _logger = logger;
             _config = config;
-            _mqtt = mqtt;
             _reportStatusTimer = PrepareReportTimer();
         }
 
@@ -39,6 +38,7 @@ namespace Mqtt.ItemGenerator
             Console.WriteLine($"[{DateTime.UtcNow}]\tBackground ItemTerminator task is running...");
             if (_config.EnableTermination)
             {
+                _mqtt = await MqttManagerFactory.CreateDefault(stoppingToken) ?? throw new ArgumentNullException(nameof(_mqtt));
                 Console.WriteLine($"[{DateTime.UtcNow}]\tItem Termination Zone: '{_config.ItemsTermination}'.");
                 await StartTerminatingItemsAsync();
             }

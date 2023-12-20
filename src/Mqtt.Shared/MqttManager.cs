@@ -15,16 +15,16 @@ public class MqttManager
 {
     private readonly IManagedMqttClient _mqttClient;
     private readonly MqttConfig _config;
-    private readonly CancellationTokenSource _cancellationTokenSource;
+    private readonly CancellationToken _cancellationToken;
     private readonly Stopwatch _aliveWatch = Stopwatch.StartNew();
 
     private ConcurrentDictionary<string, Func<ArraySegment<byte>, Task>> _topicHandlers= new();
 
-    public MqttManager(MqttConfig config, CancellationTokenSource cancellationTokenSource)
+    public MqttManager(MqttConfig config, CancellationToken cancellationToken)
     {
         _config = config;
         _mqttClient = new MqttFactory().CreateManagedMqttClient();
-        _cancellationTokenSource = cancellationTokenSource;
+        _cancellationToken = cancellationToken;
     }
 
     public bool IsConnected => _mqttClient.IsConnected;
@@ -95,7 +95,7 @@ public class MqttManager
                 .WithRetainFlag(true)
                 .Build();
 
-            _ = _mqttClient.EnqueueAsync(appMessage).ConfigureAwait(false);
+            await _mqttClient.EnqueueAsync(appMessage).ConfigureAwait(false);
         }
     }
 
@@ -136,10 +136,9 @@ public class MqttManager
 
     public async Task Shutdown(int delayMilliseconds = 500)
     {
-        if (!_cancellationTokenSource.Token.IsCancellationRequested)
+        if (!_cancellationToken.IsCancellationRequested)
         {
             Console.WriteLine($"[{DateTime.UtcNow}]\tMqttManager shutdown requested...");
-            _cancellationTokenSource.Cancel();
             await Task.Delay(delayMilliseconds).ConfigureAwait(false);
             await StopMqttClientAsync().ConfigureAwait(false);
         }
@@ -186,7 +185,7 @@ public class MqttManager
             }
         }
 
-        _ = Task.Run(InvokeMessageHandler, _cancellationTokenSource.Token).ConfigureAwait(false);
+        _ = Task.Run(InvokeMessageHandler, _cancellationToken).ConfigureAwait(false);
     }
 
     private Task _mqttClient_SynchronizingSubscriptionsFailedAsync(ManagedProcessFailedEventArgs arg)

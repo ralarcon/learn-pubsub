@@ -19,7 +19,7 @@ ZoneSimulatorConfig config = AppConfigProvider.LoadConfiguration<ZoneSimulatorCo
 CancellationTokenSource cancellationTokenSource = new();
 
 //Instantiate mqttManager
-MqttManager mqttManager = await MqttManagerFactory.CreateDefault(cancellationTokenSource);
+MqttManager mqttManager = await MqttManagerFactory.CreateDefault(cancellationTokenSource.Token);
 
 //Prepare Gracefull Exit
 AppDomain.CurrentDomain.ProcessExit += async (s, e) =>

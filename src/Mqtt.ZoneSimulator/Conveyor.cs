@@ -172,7 +172,7 @@ namespace Mqtt.ZoneSimulator
             await _mqttManager.PublishMessageAsync(item.ToItemBytes(), OutTopic).ConfigureAwait(false);
             _itemsOut++;
 
-            await ReportItemPositionAsync(item, ConveyorSensor.Out).ConfigureAwait(false);
+            _ = ReportItemPositionAsync(item, ConveyorSensor.Out).ConfigureAwait(false);
 
         }
 
