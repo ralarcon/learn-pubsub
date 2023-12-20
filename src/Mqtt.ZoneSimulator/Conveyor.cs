@@ -168,12 +168,11 @@ namespace Mqtt.ZoneSimulator
         
         private async Task SimulateConveyorExit(Item item)
         {
-            item.Timestamps?.Add($"{_id}_{nameof(ConveyorSensor.Out)}".ToLower(), DateTime.UtcNow);
-            await _mqttManager.PublishMessageAsync(item.ToItemBytes(), OutTopic).ConfigureAwait(false);
+            await ReportItemPositionAsync(item, ConveyorSensor.Out).ConfigureAwait(false);
             _itemsOut++;
 
-            _ = ReportItemPositionAsync(item, ConveyorSensor.Out).ConfigureAwait(false);
-
+            item.Timestamps?.Add($"{_id}_{nameof(ConveyorSensor.Out)}".ToLower(), DateTime.UtcNow);
+            await _mqttManager.PublishMessageAsync(item.ToItemBytes(), OutTopic).ConfigureAwait(false);
         }
 
         private async Task ReportItemPositionAsync(Item item, ConveyorSensor sensor)
