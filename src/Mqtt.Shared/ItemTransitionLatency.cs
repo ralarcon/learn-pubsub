@@ -24,10 +24,10 @@ namespace Mqtt.ItemGenerator
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ItemTransitionTypeEnum TransitionType { get; set; }
         public double LatencyMilliseconds { get; set; }
-        public string SourceZone { get; set; }
-        public string TargetZone { get; set; }
-        public string TimestampSourceName { get; set; }
-        public string TimestampTargetName { get; set; }
+        public string SourceZone { get; set; } = default!;
+        public string TargetZone { get; set; } = default!;
+        public string TimestampSourceName { get; set; } = default!;
+        public string TimestampTargetName { get; set; } = default!;
         public DateTime TimestampSource { get; set; }
         public DateTime TimestampTarget { get; set; }
     }

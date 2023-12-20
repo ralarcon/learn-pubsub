@@ -13,18 +13,16 @@ namespace Mqtt.ItemGenerator
     public class ItemStatsService : BackgroundService
     {
         private readonly ItemGeneratorConfig _config;
-        private readonly MqttManager _mqtt;
-        private readonly MqttManager _iotmqBridge;
+        private MqttManager _mqtt = default!;
+        private MqttManager _iotmqBridge = default!;
         private readonly Timer _reportStatusTimer;
         private int _currentCount;
         private readonly ConcurrentDictionary<int, Timer> _removalTimers;
         private readonly ConcurrentQueue<Item> _terminateItems = new ConcurrentQueue<Item>();
 
-        public ItemStatsService(ItemGeneratorConfig config, MqttManager mqtt, MqttManager iotmqBridge)
+        public ItemStatsService(ItemGeneratorConfig config)
         {
             _config = config;
-            _mqtt = mqtt;
-            _iotmqBridge = iotmqBridge;
             _reportStatusTimer = PrepareReportTimer();
             _removalTimers = new ConcurrentDictionary<int, Timer>();
         }
@@ -36,6 +34,9 @@ namespace Mqtt.ItemGenerator
             Console.WriteLine($"[{DateTime.UtcNow}]\tBackground ItemStatsProcessor task is running...");
             if (_config.EnableTermination)
             {
+                _mqtt = await MqttManagerFactory.CreateDefault(stoppingToken) ?? throw new ArgumentNullException(nameof(_mqtt));
+                _iotmqBridge = await MqttManagerFactory.CreateIotmqBridge(stoppingToken) ?? throw new ArgumentNullException(nameof(_iotmqBridge));
+
                 await StartGatheringTerminatedItemStats();
             }
             else
@@ -52,6 +53,8 @@ namespace Mqtt.ItemGenerator
                     var item = payload.Array.DeserializeItem();
                     if (item != null)
                     {
+                        _currentCount++;
+
                         await CalulateAndPublishLatenciesAsync(item);
 
                         ProgramItemRemovalFromStatus(item);

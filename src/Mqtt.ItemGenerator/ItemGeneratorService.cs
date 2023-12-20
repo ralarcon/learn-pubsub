@@ -13,24 +13,23 @@ namespace Mqtt.ItemGenerator
     {
         private readonly ILogger<ItemGeneratorService> _logger;
         private readonly ItemGeneratorConfig _config;
-        private readonly MqttManager _mqtt;
+        private MqttManager _mqtt = default!;
         private readonly Timer _reportStatusTimer;
         private int _currentCount;
 
-        public ItemGeneratorService(ItemGeneratorConfig config, MqttManager mqtt, ILogger<ItemGeneratorService> logger) 
+        public ItemGeneratorService(ItemGeneratorConfig config, ILogger<ItemGeneratorService> logger) 
         {
             _logger = logger;
             _config = config;
-            _mqtt = mqtt;
             _reportStatusTimer = AliveReportTimer();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-
             Console.WriteLine($"[{DateTime.UtcNow}]\tBackground ItemGenerator task is running...");
             if (_config.EnableGeneration)
             {
+                _mqtt = await MqttManagerFactory.CreateDefault(stoppingToken) ?? throw new ArgumentNullException(nameof(_mqtt));
                 if (_config.SimulationStartDelayMilliseconds > 0)
                 {
                     Console.WriteLine($"[{DateTime.UtcNow}]\tItem Generation start delayed by {_config.SimulationStartDelayMilliseconds} milliseconds...");

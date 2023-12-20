@@ -18,7 +18,7 @@ namespace Mqtt.Shared
             _iotmqBrokerConfig = AppConfigProvider.LoadConfiguration<MqttConfig>("IoTMQ");
         }
 
-        static async public Task<MqttManager> CreateDefault(CancellationTokenSource tokenSource)
+        static async public Task<MqttManager> CreateDefault(CancellationToken cancellationToken)
         {
             if (_defaultMqttManager != null)
             {
@@ -26,17 +26,17 @@ namespace Mqtt.Shared
             }
             else
             {
-                _defaultMqttManager = new MqttManager(_defaultBrokerConfig, tokenSource);
+                _defaultMqttManager = new MqttManager(_defaultBrokerConfig, cancellationToken);
                 await _defaultMqttManager.StartMqttClientAsync();
                 return _defaultMqttManager;
             }
         }
 
-        static async public Task<MqttManager> CreateIotmqBridge(CancellationTokenSource tokenSource)
+        static async public Task<MqttManager> CreateIotmqBridge(CancellationToken cancellationToken)
         {
             if(_defaultBrokerConfig.MqttServer != _iotmqBrokerConfig.MqttServer)
             {
-                _iotmqMqttManager = new MqttManager(_iotmqBrokerConfig, tokenSource);
+                _iotmqMqttManager = new MqttManager(_iotmqBrokerConfig, cancellationToken);
                 await _iotmqMqttManager.StartMqttClientAsync();
                     return _iotmqMqttManager;
             }
@@ -48,7 +48,7 @@ namespace Mqtt.Shared
                 }
                 else
                 {
-                    _defaultMqttManager = new MqttManager(_defaultBrokerConfig, tokenSource);
+                    _defaultMqttManager = new MqttManager(_defaultBrokerConfig, cancellationToken);
                     await _defaultMqttManager.StartMqttClientAsync();
                     return _defaultMqttManager;
                 }
