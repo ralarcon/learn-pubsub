@@ -158,7 +158,7 @@ namespace Mqtt.ZoneSimulator
             item.Timestamps?.Add($"{_id}_{nameof(ConveyorSensor.In)}".ToLower(), DateTime.UtcNow);
             _itemsIn++;
 
-            _ = ReportItemPositionAsync(item, ConveyorSensor.In).ConfigureAwait(false);
+            await ReportItemPositionAsync(item, ConveyorSensor.In).ConfigureAwait(false);
         }
 
         private async Task SimulateConveyorTransit(Item item)
@@ -172,7 +172,7 @@ namespace Mqtt.ZoneSimulator
             await _mqttManager.PublishMessageAsync(item.ToItemBytes(), OutTopic).ConfigureAwait(false);
             _itemsOut++;
 
-            _ = ReportItemPositionAsync(item, ConveyorSensor.Out).ConfigureAwait(false);
+            await ReportItemPositionAsync(item, ConveyorSensor.Out).ConfigureAwait(false);
 
         }
 

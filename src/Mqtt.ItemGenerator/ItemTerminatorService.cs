@@ -36,7 +36,7 @@ namespace Mqtt.ItemGenerator
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
 
-            Console.WriteLine("Background ItemTerminator task is running...");
+            Console.WriteLine($"[{DateTime.UtcNow}]\tBackground ItemTerminator task is running...");
             if (_config.EnableTermination)
             {
                 Console.WriteLine($"[{DateTime.UtcNow}]\tItem Termination Zone: '{_config.ItemsTermination}'.");
@@ -64,7 +64,7 @@ namespace Mqtt.ItemGenerator
                         await _mqtt.PublishMessageAsync(item.ToItemBytes(), TopicsDefinition.ItemsTerminated());
                         _currentCount++;
 
-                        _ = UpdateStatusToDestination(item);
+                        await UpdateStatusToDestination(item);
                     }
                 }
             });

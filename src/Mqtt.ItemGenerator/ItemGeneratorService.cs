@@ -28,7 +28,7 @@ namespace Mqtt.ItemGenerator
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
 
-            Console.WriteLine("Background ItemGenerator task is running...");
+            Console.WriteLine($"[{DateTime.UtcNow}]\tBackground ItemGenerator task is running...");
             if (_config.EnableGeneration)
             {
                 if (_config.SimulationStartDelayMilliseconds > 0)
@@ -40,13 +40,14 @@ namespace Mqtt.ItemGenerator
             }
             else
             {
-                Console.WriteLine($"[{DateTime.UtcNow}]\tItems generation is disabled.");
+                Console.WriteLine($"[{DateTime.UtcNow}]\tWARNING: Items generation is disabled.");
             }
         }
 
         private async Task StartGeneratingItems(CancellationToken cancellationToken)
         {
             Console.WriteLine($"[{DateTime.UtcNow}]\tItems generating started. Frequency: {_config.FrequencyMilliseconds} ms; MaxItems: {_config.MaxItems}.");
+            Console.WriteLine($"[{DateTime.UtcNow}]\tItems being published to {TopicsDefinition.Items(_config.ItemsGeneration)}");
             _currentCount = 0;
 
 

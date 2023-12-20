@@ -4,7 +4,7 @@ metadata:
   name: items-generator-config
   namespace: default
 data:
-  ItemGeneratorConfig__ItemsGeneration: "rcp"
+  ItemGeneratorConfig__ItemsGeneration: "src"
   ItemGeneratorConfig__ItemsTermination: "end"
   ItemGeneratorConfig__EnableGeneration: "true"
   ItemGeneratorConfig__EnableTermination: "true"
@@ -15,7 +15,7 @@ data:
   ItemGeneratorConfig__TerminationRetentionMilliseconds: "30000"
   MqttConfig__MqttServer: "iot-pocs-sim-1"
   MqttConfig__MqttPort: "1883"
-  MqttConfig__TrackStatus: "false"
+  MqttConfig__TrackStatus: "true"
   MqttConfig__QoS: "1"
   MqttConfig__ClientId: "Mqtt.ItemsGenerator"
   MqttConfig__Username: "client1"

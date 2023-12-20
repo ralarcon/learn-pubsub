@@ -33,7 +33,7 @@ namespace Mqtt.ItemGenerator
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
 
-            Console.WriteLine("Background ItemStatsProcessor task is running...");
+            Console.WriteLine($"[{DateTime.UtcNow}]\tBackground ItemStatsProcessor task is running...");
             if (_config.EnableTermination)
             {
                 await StartGatheringTerminatedItemStats();
@@ -54,19 +54,18 @@ namespace Mqtt.ItemGenerator
                     {
                         await CalulateAndPublishLatenciesAsync(item);
 
-                        //await RemoveItemFromStatusAsync(item);
                         ProgramItemRemovalFromStatus(item);
                     }
                 }
             });
         }
 
-        private async Task RemoveItemFromStatusAsync(Item item)
-        {
-            await Task.Delay(_config.TerminationRetentionMilliseconds - 500);
-            //Remove Item from status
-            await _mqtt.RemoveStatusAsync(TopicsDefinition.ItemStatus(item.Id));
-        }
+        //private async Task RemoveItemFromStatusAsync(Item item)
+        //{
+        //    await Task.Delay(_config.TerminationRetentionMilliseconds - 500);
+        //    //Remove Item from status
+        //    await _mqtt.RemoveStatusAsync(TopicsDefinition.ItemStatus(item.Id));
+        //}
 
 
         private void ProgramItemRemovalFromStatus(Item item)
