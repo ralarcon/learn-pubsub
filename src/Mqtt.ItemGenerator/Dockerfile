@@ -16,6 +16,7 @@ FROM build AS publish
 RUN dotnet publish "Mqtt.ItemGenerator.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
+ENV DOTNET_gcServer=1
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Mqtt.ItemGenerator.dll"]

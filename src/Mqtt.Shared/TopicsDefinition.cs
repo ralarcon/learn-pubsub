@@ -9,7 +9,7 @@ namespace Mqtt.Shared
 {
     public class TopicsDefinition
     {
-        public const string Root = "simulator"; // THIS MUST BE COORDINATED WITH THE CONFIG IN ItemsGenerator and ZoneSimulator
+        public const string Root = "simulator";
         private const string ItemsBaseTopic = $"{Root}/##_ZONE_##/items";
         private const string ItemsTerminatedTopic = $"{Root}/items/terminated";
         private const string ItemsLatenciesTopic = $"{Root}/items/latencies";
