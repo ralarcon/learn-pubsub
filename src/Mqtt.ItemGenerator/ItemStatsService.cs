@@ -17,14 +17,14 @@ namespace Mqtt.ItemGenerator
         private MqttManager _iotmqBridge = default!;
         private readonly Timer _reportStatusTimer;
         private int _currentCount;
-        private readonly ConcurrentDictionary<int, Timer> _removalTimers;
-        private readonly ConcurrentQueue<Item> _terminateItems = new ConcurrentQueue<Item>();
+        //private readonly ConcurrentDictionary<int, Timer> _removalTimers;
+        //private readonly ConcurrentQueue<Item> _terminateItems = new ConcurrentQueue<Item>();
 
         public ItemStatsService(ItemGeneratorConfig config)
         {
             _config = config;
             _reportStatusTimer = PrepareReportTimer();
-            _removalTimers = new ConcurrentDictionary<int, Timer>();
+            //_removalTimers = new ConcurrentDictionary<int, Timer>();
         }
 
 
@@ -46,45 +46,42 @@ namespace Mqtt.ItemGenerator
         }
         private async Task StartGatheringTerminatedItemStats()
         {
-            await _mqtt.SubscribeTopicAsync(TopicsDefinition.ItemsTerminated(), async (payload) =>
+            await _mqtt.SubscribeTopicAsync(TopicsDefinition.ItemsTerminated(), async (payload, receiveTs) =>
             {
-                if (payload.Array != null)
+                var item = payload.Array.DeserializeItem();
+                if (item != null)
                 {
-                    var item = payload.Array.DeserializeItem();
-                    if (item != null)
-                    {
-                        _currentCount++;
+                    _currentCount++;
 
-                        await CalulateAndPublishLatenciesAsync(item);
+                    await CalulateAndPublishLatenciesAsync(item);
 
-                        ProgramItemRemovalFromStatus(item);
-                    }
+                    await RemoveItemFromStatusAsync(item);
                 }
             });
         }
 
-        //private async Task RemoveItemFromStatusAsync(Item item)
-        //{
-        //    await Task.Delay(_config.TerminationRetentionMilliseconds - 500);
-        //    //Remove Item from status
-        //    await _mqtt.RemoveStatusAsync(TopicsDefinition.ItemStatus(item.Id));
-        //}
-
-
-        private void ProgramItemRemovalFromStatus(Item item)
+        private async Task RemoveItemFromStatusAsync(Item item)
         {
-            //Execute removal after _config.TerminationRetentionMilliseconds
-            Timer timer = new Timer(async (state) =>
-            {
-                if (!_removalTimers.TryRemove(item.Id, out var bogus))
-                {
-                    Console.WriteLine($"[{DateTime.UtcNow}]\tItem {item.Id} removal timer not found.");
-                }
-                await _mqtt.RemoveStatusAsync(TopicsDefinition.ItemStatus(item.Id)).ConfigureAwait(false);
-            }, null, _config.TerminationRetentionMilliseconds, Timeout.Infinite);
-
-            _removalTimers.TryAdd(item.Id, timer);
+            await Task.Delay(_config.TerminationRetentionMilliseconds - 500);
+            //Remove Item from status
+            await _mqtt.RemoveStatusAsync(TopicsDefinition.ItemStatus(item.Id));
         }
+
+
+        //private void ProgramItemRemovalFromStatus(Item item)
+        //{
+        //    //Execute removal after _config.TerminationRetentionMilliseconds
+        //    Timer timer = new Timer(async (state) =>
+        //    {
+        //        if (!_removalTimers.TryRemove(item.Id, out var bogus))
+        //        {
+        //            Console.WriteLine($"[{DateTime.UtcNow}]\tItem {item.Id} removal timer not found.");
+        //        }
+        //        await _mqtt.RemoveStatusAsync(TopicsDefinition.ItemStatus(item.Id)).ConfigureAwait(false);
+        //    }, null, _config.TerminationRetentionMilliseconds, Timeout.Infinite);
+
+        //    _removalTimers.TryAdd(item.Id, timer);
+        //}
 
         private async Task CalulateAndPublishLatenciesAsync(Item item)
         {
@@ -284,7 +281,7 @@ namespace Mqtt.ItemGenerator
             return new Timer((state) =>
             {
                 Console.WriteLine($"[{DateTime.UtcNow}]\t{_currentCount} items stats processed.");
-            }, null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
+            }, null, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(60));
         }
     }
 }

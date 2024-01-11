@@ -18,7 +18,7 @@ public class MqttManager
     private readonly CancellationToken _cancellationToken;
     private readonly Stopwatch _aliveWatch = Stopwatch.StartNew();
 
-    private ConcurrentDictionary<string, Func<ArraySegment<byte>, Task>> _topicHandlers= new();
+    private ConcurrentDictionary<string, Func<ArraySegment<byte>, DateTime, Task>> _topicHandlers= new();
 
     public MqttManager(MqttConfig config, CancellationToken cancellationToken)
     {
@@ -111,7 +111,7 @@ public class MqttManager
         await _mqttClient.EnqueueAsync(appMessage).ConfigureAwait(false);
     }
 
-    public async Task SubscribeTopicAsync(string topic, Func<ArraySegment<byte>, Task> topicHandler)
+    public async Task SubscribeTopicAsync(string topic, Func<ArraySegment<byte>,  DateTime, Task> topicHandler)
     {
         if (topicHandler is null) throw new ArgumentNullException(nameof(topicHandler));
         if (string.IsNullOrEmpty(topic)) throw new ArgumentException(topic);
@@ -177,7 +177,10 @@ public class MqttManager
         {
             if (payload.Array != null && payload.Count > 0)
             {
-                await _topicHandlers[eventArgs.ApplicationMessage.Topic](payload).ConfigureAwait(false);
+                _ = Task.Factory.StartNew( async () =>
+                {
+                    await _topicHandlers[eventArgs.ApplicationMessage.Topic](payload, DateTime.Now).ConfigureAwait(false);
+                }, _cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default).ConfigureAwait(false);
             }
             else
             {

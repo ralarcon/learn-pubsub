@@ -94,7 +94,7 @@ namespace Mqtt.ItemGenerator
             return new Timer((state) =>
             {
                 Console.WriteLine($"[{DateTime.UtcNow}]\t{_currentCount} items generated.");
-            }, null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
+            }, null, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(60));
         }
     }
 }
