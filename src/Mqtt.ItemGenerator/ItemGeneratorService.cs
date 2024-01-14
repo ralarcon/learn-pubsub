@@ -54,6 +54,7 @@ namespace Mqtt.ItemGenerator
 
             while ((_config.MaxItems == 0 || _currentCount < _config.MaxItems) && !cancellationToken.IsCancellationRequested)
             {
+                var creationTs = DateTime.UtcNow;
                 _currentCount++;
                 Item item = new()
                 {
@@ -61,9 +62,21 @@ namespace Mqtt.ItemGenerator
                     BatchId = batchId,
                     Timestamps = new Dictionary<string, DateTime>()
                     {
-                        { $"{_config.ItemsGeneration}_created", DateTime.UtcNow }
+                        { $"{_config.ItemsGeneration}_created", creationTs}
                     }
                 };
+
+                await _mqtt.PublishHopLatency(new ItemTransitionLatency()
+                {
+                    Id = item.Id,
+                    BatchId = item.BatchId,
+                    TransitionType = ItemTransitionTypeEnum.Creation,
+                    LatencyMilliseconds = 0,
+                    TimestampSource = creationTs,
+                    TimestampTarget = creationTs,
+                    TimestampTargetName = $"{_config.ItemsGeneration}_created"
+                });
+
                 ItemPosition itemPosition = new()
                 {
                     Id = item.Id,

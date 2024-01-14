@@ -13,6 +13,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
+using Mqtt.ItemGenerator;
 
 namespace Mqtt.ZoneSimulator
 {
@@ -60,7 +61,7 @@ namespace Mqtt.ZoneSimulator
             Console.WriteLine($"[{DateTime.UtcNow}]\tStarting Conveyor with Id {_id} waiting for items in the topic '{InTopic}'.");
             Console.WriteLine($"[{DateTime.UtcNow}]\t>> Conveyor: subscribing to {InTopic} topic and publishing to {OutTopic}.");
 
-            await _mqttManager.SubscribeTopicAsync(InTopic, async (payload, receiveTs) =>
+            await _mqttManager.SubscribeTopicAsync(InTopic, async (payload, sourceTs, receiveTs, hopms) =>
             {
                 var array = payload.Array ?? throw new ArgumentNullException(nameof(payload));
 
@@ -68,11 +69,11 @@ namespace Mqtt.ZoneSimulator
 
                 item.ItemStatus = ItemStatusEnum.InTransit;
 
-                await SimulateConveyorEnter(item).ConfigureAwait(false);
+                await SimulateConveyorEnter(item, sourceTs, receiveTs, hopms).ConfigureAwait(false);
 
                 await SimulateConveyorTransit(item).ConfigureAwait(false);
 
-                await SimulateConveyorExit(item).ConfigureAwait(false);
+                await SimulateConveyorExit(item, receiveTs).ConfigureAwait(false);
             });
         }
 
@@ -85,12 +86,22 @@ namespace Mqtt.ZoneSimulator
             
             Console.WriteLine($"[{DateTime.UtcNow}]\t> Interconnection: subscribing to {sourceTopic} topic and publishing to {targetTopic}.");
 
-            await _mqttManager.SubscribeTopicAsync(sourceTopic, async (payload, receiveTs) =>
+            await _mqttManager.SubscribeTopicAsync(sourceTopic, async (payload, sourceTs, receiveTs, hopms) =>
             {
-                await Task.Delay(_interconnectionDelayMilliseconds).ConfigureAwait(false);
-
                 Item item = payload.Array.DeserializeItem();
-                item.Timestamps?.Add($"{_id}_to_{nextConveyor.Id}", receiveTs);
+
+                await _mqttManager.PublishHopLatency(new ItemTransitionLatency()
+                {
+                    Id = item.Id,
+                    BatchId = item.BatchId,
+                    TransitionType = ItemTransitionTypeEnum.ConveyorChain,
+                    LatencyMilliseconds = hopms,
+                    TimestampSource = sourceTs,
+                    TimestampTarget = receiveTs,
+                    TimestampTargetName = $"{_id}_to_{nextConveyor.Id}"
+                });
+
+                await Task.Delay(_interconnectionDelayMilliseconds).ConfigureAwait(false);
 
                 await _mqttManager.PublishMessageAsync(item.ToItemBytes(), targetTopic).ConfigureAwait(false);
             });
@@ -105,12 +116,23 @@ namespace Mqtt.ZoneSimulator
 
             Console.WriteLine($"[{DateTime.UtcNow}]\t# Transition: subscribing to {sourceTopic} topic and publishing to {targetTopic}.");
 
-            await _mqttManager.SubscribeTopicAsync(sourceTopic, async (payload, receiveTs) =>
+            await _mqttManager.SubscribeTopicAsync(sourceTopic, async (payload, sourceTs, receiveTs, hopms) =>
             {
-                await Task.Delay(_interconnectionDelayMilliseconds).ConfigureAwait(false);
 
                 Item item = payload.Array.DeserializeItem();
-                item.Timestamps?.Add($"{_id}_to_{destinationZone}", receiveTs);
+
+                await _mqttManager.PublishHopLatency(new ItemTransitionLatency()
+                {
+                    Id = item.Id,
+                    BatchId = item.BatchId,
+                    TransitionType = ItemTransitionTypeEnum.ZoneEnter,
+                    LatencyMilliseconds = hopms,
+                    TimestampSource = sourceTs,
+                    TimestampTarget = receiveTs,
+                    TimestampTargetName = $"{_id}_to_{destinationZone}"
+                });
+
+                await Task.Delay(_interconnectionDelayMilliseconds).ConfigureAwait(false);
 
                 await _mqttManager.PublishMessageAsync(item.ToItemBytes(), targetTopic).ConfigureAwait(false);
 
@@ -127,13 +149,23 @@ namespace Mqtt.ZoneSimulator
 
             Console.WriteLine($"[{DateTime.UtcNow}]\t# Transition: subscribing to {sourceTopic} topic and publishing to {targetTopic}.");
 
-            await _mqttManager.SubscribeTopicAsync(sourceTopic, async (payload, receiveTs) =>
+            await _mqttManager.SubscribeTopicAsync(sourceTopic, async (payload, sourceTs, receiveTs, hopms) =>
             {
-                await Task.Delay(_interconnectionDelayMilliseconds).ConfigureAwait(false);
-
                 Item item = payload.Array.DeserializeItem();
-                item.Timestamps?.Add($"{sourceZone}_to_{_id}", receiveTs);
 
+                await _mqttManager.PublishHopLatency(new ItemTransitionLatency()
+                {
+                    Id = item.Id,
+                    BatchId = item.BatchId,
+                    TransitionType = ItemTransitionTypeEnum.ZoneExit,
+                    LatencyMilliseconds = hopms,
+                    TimestampSource = sourceTs,
+                    TimestampTarget = receiveTs,
+                    TimestampTargetName = $"{sourceZone}_to_{_id}"
+                });
+
+                await Task.Delay(_interconnectionDelayMilliseconds).ConfigureAwait(false);
+                
                 await _mqttManager.PublishMessageAsync(item.ToItemBytes(), targetTopic).ConfigureAwait(false);
 
                 await ReportItemZoneTransition(item, sourceZone, _id).ConfigureAwait(false);
@@ -141,10 +173,22 @@ namespace Mqtt.ZoneSimulator
         }
 
 
-        private async Task SimulateConveyorEnter(Item item)
+        private async Task SimulateConveyorEnter(Item item, DateTime sourceTs, DateTime receiveTs, double hopms)
         {
-            item.Timestamps?.Add($"{_id}_{nameof(ConveyorSensor.In)}".ToLower(), DateTime.Now);
+
+            await _mqttManager.PublishHopLatency(new ItemTransitionLatency()
+            {
+                Id = item.Id,
+                BatchId = item.BatchId,
+                TransitionType = ItemTransitionTypeEnum.ConveyorEnter,
+                LatencyMilliseconds = hopms,
+                TimestampSource = sourceTs,
+                TimestampTarget = receiveTs,
+                TimestampTargetName = $"{_id}_{nameof(ConveyorSensor.In)}".ToLower()
+            });
+
             _itemsIn++;
+
 
             await ReportItemPositionAsync(item, ConveyorSensor.In).ConfigureAwait(false);
         }
@@ -154,12 +198,24 @@ namespace Mqtt.ZoneSimulator
             await Task.Delay(_transitDelayMilliseconds).ConfigureAwait(false);
         }
         
-        private async Task SimulateConveyorExit(Item item)
+        private async Task SimulateConveyorExit(Item item, DateTime receiveTs)
         {
+
+            await _mqttManager.PublishHopLatency(new ItemTransitionLatency()
+            {
+                Id = item.Id,
+                BatchId = item.BatchId,
+                TransitionType = ItemTransitionTypeEnum.ConveyorExit,
+                LatencyMilliseconds = (DateTime.UtcNow - receiveTs).TotalMilliseconds,
+                TimestampSource = receiveTs,
+                TimestampTarget = DateTime.UtcNow,
+                TimestampTargetName = $"{_id}_{nameof(ConveyorSensor.Out)}".ToLower()
+            });
+
+
             await ReportItemPositionAsync(item, ConveyorSensor.Out).ConfigureAwait(false);
             _itemsOut++;
 
-            item.Timestamps?.Add($"{_id}_{nameof(ConveyorSensor.Out)}".ToLower(), DateTime.UtcNow);
             await _mqttManager.PublishMessageAsync(item.ToItemBytes(), OutTopic).ConfigureAwait(false);
         }
 

@@ -1,4 +1,5 @@
-﻿using Mqtt.Shared;
+﻿using Mqtt.ItemGenerator;
+using Mqtt.Shared;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
@@ -18,7 +19,8 @@ public class MqttManager
     private readonly CancellationToken _cancellationToken;
     private readonly Stopwatch _aliveWatch = Stopwatch.StartNew();
 
-    private ConcurrentDictionary<string, Func<ArraySegment<byte>, DateTime, Task>> _topicHandlers= new();
+    //Handler for each topic subscribed (payload, sourceTs, receiveTs, hopLatency)
+    private ConcurrentDictionary<string, Func<ArraySegment<byte>, DateTime, DateTime, double, Task>> _topicHandlers= new();
 
     public MqttManager(MqttConfig config, CancellationToken cancellationToken)
     {
@@ -79,6 +81,18 @@ public class MqttManager
             .WithTopic(topic)
             .WithPayload(payload)
             .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)_config.QoS)
+            .WithUserProperty($"SourceTs", JsonSerializer.Serialize(DateTime.UtcNow))
+            .Build();
+
+        await _mqttClient.EnqueueAsync(appMessage).ConfigureAwait(false);
+    }
+
+    public async Task PublishHopLatency(ItemTransitionLatency hop)
+    {
+        var appMessage = new MqttApplicationMessageBuilder()
+            .WithTopic(TopicsDefinition.ItemsLatencies()) 
+            .WithPayload(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(hop)))
+            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
             .Build();
 
         await _mqttClient.EnqueueAsync(appMessage).ConfigureAwait(false);
@@ -111,7 +125,7 @@ public class MqttManager
         await _mqttClient.EnqueueAsync(appMessage).ConfigureAwait(false);
     }
 
-    public async Task SubscribeTopicAsync(string topic, Func<ArraySegment<byte>,  DateTime, Task> topicHandler)
+    public async Task SubscribeTopicAsync(string topic, Func<ArraySegment<byte>,  DateTime, DateTime, double, Task> topicHandler)
     {
         if (topicHandler is null) throw new ArgumentNullException(nameof(topicHandler));
         if (string.IsNullOrEmpty(topic)) throw new ArgumentException(topic);
@@ -179,7 +193,18 @@ public class MqttManager
             {
                 _ = Task.Factory.StartNew( async () =>
                 {
-                    await _topicHandlers[eventArgs.ApplicationMessage.Topic](payload, DateTime.Now).ConfigureAwait(false);
+                    DateTime receiveTs = DateTime.UtcNow;
+                    DateTime sourceTs = DateTime.MinValue;
+                    double hopLatency = 0;
+                    if (eventArgs.ApplicationMessage.UserProperties != null && eventArgs.ApplicationMessage.UserProperties.Count > 0)
+                    {
+                        var sourceTsJson = eventArgs.ApplicationMessage.UserProperties.Where(p => p.Name == "SourceTs").FirstOrDefault();
+                        if (sourceTsJson != null)
+                        {
+                            sourceTs = JsonSerializer.Deserialize<DateTime>(sourceTsJson.Value);
+                            hopLatency = (receiveTs - sourceTs).TotalMilliseconds;
+                        }                    }
+                    await _topicHandlers[eventArgs.ApplicationMessage.Topic](payload, sourceTs, receiveTs, hopLatency).ConfigureAwait(false);
                 }, _cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default).ConfigureAwait(false);
             }
             else
