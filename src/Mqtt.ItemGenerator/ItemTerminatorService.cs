@@ -51,16 +51,29 @@ namespace Mqtt.ItemGenerator
         {
             Console.WriteLine($"[{DateTime.UtcNow}]\tReady to remove items from zone '{_config.ItemsTermination}' after {_config.TerminationRetentionMilliseconds} seconds of arrival.");
 
-            await _mqtt.SubscribeTopicAsync(TopicsDefinition.Items(_config.ItemsTermination), async (payload, receiveTs) =>
+            await _mqtt.SubscribeTopicAsync(TopicsDefinition.Items(_config.ItemsTermination), async (payload, sourceTs, receiveTs, hopms) =>
             {
                 var item = payload.Array.DeserializeItem();
                 if (item != null)
                 {
+
+                    await _mqtt.PublishHopLatency(new ItemTransitionLatency()
+                    {
+                        Id = item.Id,
+                        BatchId = item.BatchId,
+                        TransitionType = ItemTransitionTypeEnum.Termination,
+                        LatencyMilliseconds = hopms,
+                        TimestampSource = sourceTs,
+                        TimestampTarget = receiveTs,
+                        TimestampTargetName = $"{_config.ItemsTermination}_terminated"
+                    });
+
                     item.Timestamps?.Add($"{_config.ItemsTermination}_terminated".ToLower(), receiveTs);
+
                     item.ItemStatus = ItemStatusEnum.Delivered;
                     await _mqtt.PublishMessageAsync(item.ToItemBytes(), TopicsDefinition.ItemsTerminated());
                     _currentCount++;
-
+                    
                     await UpdateStatusToDestination(item);
                 }
 

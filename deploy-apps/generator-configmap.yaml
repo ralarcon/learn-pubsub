@@ -19,8 +19,3 @@ data:
   MqttConfig__QoS: "1"
   MqttConfig__ClientId: "Mqtt.ItemsGenerator"
   MqttConfig__Username: "client1"
-  IoTMQ__MqttServer: "iot-pocs-vm1"
-  IoTMQ__MqttPort: "1883"
-  IoTMQ__QoS: "1"
-  IoTMQ__ClientId: "Mqtt.ItemGenerator.Bridge"
-  IoTMQ__Username: "client1"

@@ -6,7 +6,6 @@ if [ "$#" -ne 1 ]; then
 fi
 
 mqttPassword=$(echo -n "$1" | base64)
-iotmqPassword=$(echo -n "$1" | base64)
 
 cat <<EOF > secrets.yaml
 apiVersion: v1
@@ -15,7 +14,6 @@ metadata:
   name: simulation-secrets
 data:
   MqttConfig__Password: $mqttPassword
-  IoTMQ__Password: $iotmqPassword
 EOF
 
 echo "Secrets file created successfully."
