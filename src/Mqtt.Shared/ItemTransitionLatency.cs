@@ -5,8 +5,8 @@ namespace Mqtt.ItemGenerator
     public enum ItemTransitionTypeEnum
     {
         Creation,
-        ZoneEnter,
-        ZoneExit,
+        ZoneTransitionTo,
+        ZoneTransitionFrom,
         ConveyorEnter,
         ConveyorExit,
         ConveyorChain,
