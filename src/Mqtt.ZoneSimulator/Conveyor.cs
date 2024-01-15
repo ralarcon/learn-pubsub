@@ -125,7 +125,7 @@ namespace Mqtt.ZoneSimulator
                 {
                     Id = item.Id,
                     BatchId = item.BatchId,
-                    TransitionType = ItemTransitionTypeEnum.ZoneEnter,
+                    TransitionType = ItemTransitionTypeEnum.ZoneTransitionTo,
                     LatencyMilliseconds = hopms,
                     TimestampSource = sourceTs,
                     TimestampTarget = receiveTs,
@@ -157,7 +157,7 @@ namespace Mqtt.ZoneSimulator
                 {
                     Id = item.Id,
                     BatchId = item.BatchId,
-                    TransitionType = ItemTransitionTypeEnum.ZoneExit,
+                    TransitionType = ItemTransitionTypeEnum.ZoneTransitionFrom,
                     LatencyMilliseconds = hopms,
                     TimestampSource = sourceTs,
                     TimestampTarget = receiveTs,

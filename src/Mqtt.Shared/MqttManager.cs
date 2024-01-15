@@ -203,7 +203,8 @@ public class MqttManager
                         {
                             sourceTs = JsonSerializer.Deserialize<DateTime>(sourceTsJson.Value);
                             hopLatency = (receiveTs - sourceTs).TotalMilliseconds;
-                        }                    }
+                        }                   
+                    }
                     await _topicHandlers[eventArgs.ApplicationMessage.Topic](payload, sourceTs, receiveTs, hopLatency).ConfigureAwait(false);
                 }, _cancellationToken, TaskCreationOptions.PreferFairness, TaskScheduler.Default).ConfigureAwait(false);
             }
