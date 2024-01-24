@@ -4,8 +4,8 @@ echo "Exec secrets-creat-mqtt-passwords.sh and secrets-create-pull-serviceprinci
 echo ""
 echo "---"
 echo ""
-echo "Applying zonesimulator-pac-configmap.yaml"
-kubectl apply -f ./zonesimulator-pac-configmap.yaml
+echo "Applying sortersimulator-configmap.yaml"
+kubectl apply -f ./sortersimulator-configmap.yaml
 
-echo "Applying zonesimulator-pac.yaml"
-kubectl apply -f ./zonesimulator-pac.yaml
+echo "Applying sortersimulator.yaml"
+kubectl apply -f ./sortersimulator.yaml
