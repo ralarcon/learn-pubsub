@@ -1,0 +1,14 @@
+  tolerations:
+  - key: "scaleset"
+    operator: "Equal"
+    value: "simulation"
+    effect: "NoSchedule"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: "scaleset"
+            operator: In
+            values:
+            - "simulation":
