@@ -5,8 +5,6 @@ VisualStudioVersion = 17.7.34202.233
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B2F34389-EA5F-4622-9ADC-46482CC59309}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mqtt.EchoClient", "Mqtt.EchoClient\Mqtt.EchoClient.csproj", "{CC9ABE0C-AD0B-4069-B762-5BB0BC879264}"
-EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{C62B469A-9BA5-46DF-8879-0FAD06452942}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mqtt.Shared", "Mqtt.Shared\Mqtt.Shared.csproj", "{06CE3FD6-D32E-4ED8-831C-CF0628D6DECA}"
@@ -21,10 +19,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CC9ABE0C-AD0B-4069-B762-5BB0BC879264}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CC9ABE0C-AD0B-4069-B762-5BB0BC879264}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CC9ABE0C-AD0B-4069-B762-5BB0BC879264}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CC9ABE0C-AD0B-4069-B762-5BB0BC879264}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C62B469A-9BA5-46DF-8879-0FAD06452942}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C62B469A-9BA5-46DF-8879-0FAD06452942}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C62B469A-9BA5-46DF-8879-0FAD06452942}.Release|Any CPU.ActiveCfg = Release|Any CPU
