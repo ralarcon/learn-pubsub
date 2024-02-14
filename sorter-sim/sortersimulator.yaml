@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sorter-simulator
+  namespace: default
+spec:
+  containers:
+  - name: sorter-simulator
+    image: ragcdevacr.azurecr.io/sim/zonesimulator:latest
+    envFrom:
+    - configMapRef:
+        name: sorter-simulator-config
+    - secretRef:
+        name: simulation-secrets               
+  restartPolicy: OnFailure
+  imagePullSecrets:
+  - name: ragcdevacr-pull-secret

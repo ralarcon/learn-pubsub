@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sorter-items-generator
+  namespace: default
+spec:
+  containers:
+  - name: sorter-items-generator
+    image: ragcdevacr.azurecr.io/sim/itemsgenerator:latest
+    envFrom:
+    - configMapRef:
+        name: sorter-items-generator-config
+    - secretRef:
+        name: simulation-secrets        
+  restartPolicy: OnFailure
+  imagePullSecrets:
+  - name: ragcdevacr-pull-secret
